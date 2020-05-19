@@ -22,6 +22,15 @@ def parse(args=sys.argv[1:]):
                         help='end time')
     parser.add_argument('-n', '--nframes', type=int, default=3001,
                         help='number frames')
+    parser.add_argument('-w', '--width', type=float, default=0.0,
+                        help='image width (default based on # subspaces)')
+    #
+    # Abbreviation -h would conflict with --help
+    #
+    parser.add_argument('-t', '--height', type=float, default=5.0,
+                        help='image height')
+    parser.add_argument('-d', '--dpi', type=int, default=150,
+                        help='image height')
     parser.add_argument('-v', '--verbose', action='count')
     parser.add_argument('-c', '--nocolorbar', action='store_true',
                         help="don't plot colorbars")
@@ -56,8 +65,12 @@ def plot_curves(t, soln, opts=defplotopts):
     nplots = len(opts['subspaces'])
     names = opts['names']
     images = soln.images(t)
-    width = 4.0*nplots + 2.0*(nplots-1)
-    fig = plt.figure(1, figsize=(width,5))
+    height = opts['height']
+    if opts['width'] > 0.0:
+        width = opts['width']
+    else:
+        width = 4.0*nplots + 2.0*(nplots-1)
+    fig = plt.figure(1, figsize=(width,height), dpi=opts['dpi'])
     currplot = 1
     fig.clf()
     params=soln.ps.values(t)
@@ -135,6 +148,9 @@ def main():
         names=names,
         label=clargs.label,
         tformat=clargs.format_time,        
+        width=clargs.width,
+        height=clargs.height,
+        dpi=clargs.dpi,
     )
     for k,t in enumerate(times):
         if t < start:
