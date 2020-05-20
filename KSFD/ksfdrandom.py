@@ -225,6 +225,14 @@ def random_function(
             comm=comm
         )
         vals.assemble()
+    if (                        # shortcut for when grids match
+            np.all(randgrid.nps == grid.nps) and
+            np.all(randgrid.spacing == grid.spacing)
+    ):
+        vec = grid.Sdmda.createGlobalVec()
+        vec.array = vals.array
+        vec.assemble()
+        return vec
     lvals = randgrid.Sdmda.createLocalVec()
     randgrid.Sdmda.globalToLocal(vals, lvals)
     larr = lvals.array
