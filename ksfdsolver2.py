@@ -204,6 +204,8 @@ def resume_values(clargs, grid, ps):
     # This may need to retrieve only a slice
     #
     values = cpf.retrieve_by_time(tlast)
+    values = values.copy(order='F')
+    cpf.close()
     lastvec.array = values.reshape(lastvec.array.shape, order='F')
     lastvec.assemble()
     logMAIN('lastvec.array', lastvec.array)
