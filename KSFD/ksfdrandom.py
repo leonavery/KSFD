@@ -17,7 +17,7 @@ def mpi_sample(
     seed=None,
     comm=MPI.COMM_WORLD
 ):
-    """Consistent random samples across MPi processes
+    """Consistent random samples across MPI processes
 
     Optional keyword parameters:
     call=(np.random.randn, [], {}): call is a tuple of the form
@@ -160,7 +160,7 @@ def random_function(
     grid,
     randgrid=None,
     vals=None,
-    mu=1.0,
+    mu=0.0,
     sigma=0.01,
     tol=1e-10,
     periodic=True,
@@ -190,8 +190,8 @@ def random_function(
         returned by randgrid.Sdmda.createGlobalVec(). If not provided,
         random values are drawn from a normal distribution with mean
         mu and standard deviation sigma.
-    mu=1.0: See localvals.
-    sigma=0.01: See localvals.
+    mu=0.0: See vals.
+    sigma=0.01: See vals.
     tol=1e-10: A relative tolerance used in determining if two points
         specified by coordinates are the same. 
     f=(lambda x: 2*x**3 - 3*x**2 + 1): the function used to fill in the
@@ -233,7 +233,7 @@ def random_function(
     logRANDOM('dcoords.shape', dcoords.shape)
     tree = KDTree(dcoords)
     dvec = np.zeros(len(dcoords), dtype=float)
-    if sigma == 0.0:            # We don't need the computation
+    if not valsSupplied and sigma == 0.0: # We don't need the computation
         dvec[:] = mu
     else:
     # coordinates of randgrid vertexes (including ghost points)

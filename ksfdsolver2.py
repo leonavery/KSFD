@@ -16,7 +16,8 @@ from argparse import Namespace, RawDescriptionHelpFormatter
 from KSFD import (KSFDException, Grid, TimeSeries, random_function,
                   LigandGroups, ParameterList, Parser,
                   default_parameters, SolutionParameters,
-                  SpatialExpression, Derivatives, implicitTS)
+                  SpatialExpression, Derivatives, implicitTS,
+                  mpi_sample)
 from KSFD.ksfddebug import log
 import KSFD
 
@@ -226,8 +227,24 @@ def start_values(clargs, grid, ps):
         )
     murho0 = ps.params0['Nworms']/(ps.width**ps.dim)
     sigma = ps.params0['srho0']
-    randrho = random_function(grid, randgrid=rgrid, mu=murho0,
-                              sigma=sigma)
+    rvals = rgrid.Sdmda.createGlobalVec()
+    rva = rvals.array.reshape(rgrid.Slshape, order='F')
+    if sigma == 0.0:
+        rva = murho0
+    else:
+        SpatialExpression(ps, rgrid, sigma)(
+            out=(rva,)
+        )
+        rvals.assemble()
+        stn_sample = mpi_sample( # standard normal sample
+            call=(np.random.normal,
+                  [],
+                  dict(size=rva.shape))
+        )
+        rva *= stn_sample
+        rva += murho0
+    rvals.assemble()
+    randrho = random_function(grid, randgrid=rgrid, vals=rvals)
     rra = randrho.array.reshape(grid.Slshape, order='F')
     vec = grid.Vdmda.createGlobalVec()
     va = vec.array.reshape(grid.Vlshape, order='F')

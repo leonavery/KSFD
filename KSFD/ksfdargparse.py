@@ -24,7 +24,7 @@ default_parameters = [
     ('maxscale', 2.0, 'scale of cap potential'),
     ('s2', 5.56e-4, 'random worm movement (sigma^2/2)'),
     ('Nworms', 0.0, 'total number of worms'),
-    ('srho0', 90.0, 'standard deviation of rho(0)'),
+    ('srho0', '90.0', 'standard deviation of rho(0)'),
     ('rho0', '9000.0', 'C++ string function for rho0, added to random rho0'),
     ('U0_1_1', '', 'C++ string function for U0_1_1'),
     ('ngroups', 1, 'number of ligand groups'),
