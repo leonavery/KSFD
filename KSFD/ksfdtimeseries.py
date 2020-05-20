@@ -39,7 +39,7 @@ Finally, I will write a simple script to merge all the files of
 MPi process group of any size will be able to retrieve data written by
 a process group of any size. 
 """
-import h5py, os, re
+import h5py, os, re, gc
 import numpy as np
 import petsc4py
 from mpi4py import MPI
@@ -384,7 +384,8 @@ class KSFDTimeSeries:
         self._sort()
         self.tsf.close()
         del self._tsf
-
+        gc.collect()
+        
     def __del__(self):
         self.close()
 
@@ -644,7 +645,7 @@ class Gatherer(KSFDTimeSeries):
         )
         self.set_ranges()
         #
-        # Since we have to open the tank 0 file before startig
+        # Since we have to open the rank 0 file before startig
         # iteration, the following flag is used to determine whether
         # to open a new file when __iter__ is called
         #
@@ -679,6 +680,7 @@ class Gatherer(KSFDTimeSeries):
             #
             # We previously exhausted the iteration. Restart it
             #
+            self.tsf.close()
             self.__init__(self.basename, self.size)
         elif self.iter_started:
             #

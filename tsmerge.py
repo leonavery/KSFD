@@ -49,16 +49,22 @@ def main():
     parser.add_argument('-o', '--outfile',
                         help='merged file basename')
     parser.add_argument('infiles', nargs='+', help='files to merge')
+    parser.add_argument('-v', '--verbose', action='count')
     clargs = parser.parse_args()
     times = np.empty((0), dtype=float)
     steps = np.empty((0), dtype=int)
     files = np.empty((0), dtype=int)
     grid = None
     for f,name in enumerate(clargs.infiles):
+        if clargs.verbose > 0:
+            print('collecting times from {name}'.format(name=name),
+                  flush=True)
         g = Gatherer(name)
         if grid is None:
             grid = g.grid
         st = g.sorted_times()
+        if clargs.verbose > 1:
+            print('times:', st, flush=True)
         steps = np.append(steps, g.steps())
         times = np.append(times, st)
         files = np.append(files, np.full_like(st, f, dtype=int))
@@ -71,6 +77,9 @@ def main():
     k = 0
     del out.tsf['/info']
     for f,name in enumerate(clargs.infiles):
+        if clargs.verbose > 0:
+            print('collecting data from {name}'.format(name=name),
+                  flush=True)
         fmatch = files == f
         forder = order[fmatch]
         g = Gatherer(name)
@@ -82,10 +91,15 @@ def main():
                 shallow=False
             )
         for s in g:
+            if clargs.verbose > 0:
+                print(str(s.tsf), flush=True)
             for point in forder:
                 k = steps[point]
                 t = times[point]
                 vals = s.retrieve_by_number(k)
+                if clargs.verbose > 1:
+                    print('point {k}, time {t}'.format(k=k, t=t),
+                          flush=True)
                 out.store_slice(s.ranges, vals, t)
         g.close()
     out.close()
