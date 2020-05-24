@@ -839,6 +839,8 @@ class Derivatives:
         lfvec = self.grid.Vdmda.getLocalVec()
         self.grid.Vdmda.globalToLocal(fvec, lfvec)
         farr = lfvec.array.reshape(self.grid.Vashape, order='F')
+        rhomin = self.ps.params0['rhomin']
+        farr[0] = np.maximum(farr[0], rhomin) # don't take logs of <=0
         if out is None:
             dfdt = self.grid.Vdmda.createGlobalVec()
         else:

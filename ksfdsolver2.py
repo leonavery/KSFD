@@ -294,7 +294,7 @@ def main(*args):
             list(ps.groups.ligands()))
     np.random.seed(commandlineArguments.seed)
     if (commandlineArguments.showparams):
-        for n,p,d,h in prmms.params0.params():
+        for n,p,d,h in ps.params0.params():
             print(
                 '{n}={val} -- {h}'.format(n=n, val=p(), h=h)
             )

@@ -185,6 +185,7 @@ class KSFDTS(petsc4py.PETSc.TS):
             u = self.getSolution()
             solvec = self.u.array
             logTS('solvec - lastu.array', solvec - lastu.array)
+            logTS('np.min(solvec)', np.min(solvec))
             self.monitor(k, t, u)
 
     def cleanup(self):
@@ -369,9 +370,15 @@ class implicitTS(KSFDTS):
         f: a petsc4py.PETSc.Vec in which A.u' - b will be left.
         """
         logTS('implicitIF entered')
+        logTS('np.min(u.array),np.max(u.array)',
+              np.min(u.array),np.max(u.array))
+        logTS('np.min(udot.array),np.max(udot.array)',
+              np.min(udot.array),np.max(udot.array))
         f = self.derivs.dfdt(u, t=t, out=f)
         f.aypx(-1.0, udot)
         f.assemble()
+        logTS('np.min(f.array),np.max(f.array)',
+              np.min(f.array),np.max(f.array))
         return
 
     def implicitIJ(self, ts, t, u, udot, shift, J, B):
