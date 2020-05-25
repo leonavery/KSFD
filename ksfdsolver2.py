@@ -46,12 +46,12 @@ def parse_commandline(args=None):
         epilog=parameter_help(),
         formatter_class=RawDescriptionHelpFormatter
     )
-    parser.add_argument('--randgridnw', type=int,
-                        help='# divisions in grid width for random rho0')
-    parser.add_argument('--randgridnh', type=int,
-                        help='# divisions in grid height for random rho0')
-    parser.add_argument('--randgridnd', type=int,
-                        help='# divisions in grid depth for random rho0')
+    # parser.add_argument('--randgridnw', type=int,
+    #                     help='# divisions in grid width for random rho0')
+    # parser.add_argument('--randgridnh', type=int,
+    #                     help='# divisions in grid height for random rho0')
+    # parser.add_argument('--randgridnd', type=int,
+    #                     help='# divisions in grid depth for random rho0')
     parser.add_argument('--cappotential', choices=['tophat', 'witch'],
                         default='tophat',
                         help='potential function for capping rho')
@@ -214,9 +214,12 @@ def resume_values(clargs, grid, ps):
     return lastvec,t
 
 def start_values(clargs, grid, ps):
-    rnx = clargs.randgridnw if clargs.randgridnw else ps.nwidth//4
-    rny = clargs.randgridnh if clargs.randgridnh else ps.nheight//4
-    rnz = clargs.randgridnd if clargs.randgridnd else ps.ndepth//4
+    rnx = (ps.params0['randgridnw'] if ps.params0['randgridnw'] else
+           ps.nwidth//4)
+    rny = (ps.params0['randgridnh'] if ps.params0['randgridnh'] else
+           ps.nheight//4)
+    rnz = (ps.params0['randgridnd'] if ps.params0['randgridnd'] else
+           ps.ndepth//4)
     rgrid = Grid(dim=ps.dim,
                  width=ps.width, height=ps.height,
                  depth=ps.depth,

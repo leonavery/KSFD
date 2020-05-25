@@ -11,9 +11,12 @@ default_parameters = [
     ('degree', 3, 'order of finite difference approximations'),
     ('dim', 1, 'spatial dimensions'),
     ('nelements', 8, 'number grid poimnts in each dimension'),
-    ('nwidth', 8, 'number grid poimnts in width'),
-    ('nheight', 8, 'number grid poimnts in height'),
-    ('ndepth', 8, 'number grid poimnts in depth'),
+    ('nwidth', 8, 'number grid points in width'),
+    ('nheight', 8, 'number grid points in height'),
+    ('ndepth', 8, 'number grid points in depth'),
+    ('randgridnw', 0, 'random grid with'),
+    ('randgridnh', 0, 'random grid height'),
+    ('randgridnd', 0, 'random grid depth'),
     ('width', 1.0, 'width of spatial domain'),
     ('height', 1.0, 'height of spatial domain'),
     ('depth', 1.0, 'depth of spatial domain'),
@@ -53,8 +56,7 @@ class Parser(ArgumentParser):
     program --petsc petscarg1 petscarg2 ...
     program myarg1 ... --petsc petscarg1 petscarg2 ... -- myarg2 myarg3
 
-    The list of PETSc arguments is terminated by a '--' ot the end of
-    the command.
+    The list of PETSc arguments is terminated by a '--' ot its end
 
     parse_args returns a Namespace object that contains the results of
     parsing your object in the usual way. In addition, it will contain
