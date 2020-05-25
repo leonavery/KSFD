@@ -238,6 +238,22 @@ class KSFDTS(petsc4py.PETSc.TS):
         #
         cpname = prefix + '_' + str(k) + '_'
         cpf = TimeSeries(cpname, grid=self.derivs.grid, mode='w')
+        cpf.info['commandlineArguments'] = dill.dumps(
+            self.derivs.ps.clargs,
+            protocol=0
+        )
+        cpf.info['SolutionParameters'] = dill.dumps(
+            self.derivs.ps, recurse=True,
+            protocol=0
+        )
+        cpf.info['dt'] = h
+        try:
+            cpf.info['sources'] = dill.dumps(
+                self.derivs.sources,
+                protocol=0
+            )
+        except AttributeError:
+            pass
         cpf.store(u, t, k=k)
         cpf.close()
 

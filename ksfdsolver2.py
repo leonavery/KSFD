@@ -199,6 +199,15 @@ def resume_values(clargs, grid, ps):
     tlast = cpf.sorted_times()[-1]
     if clargs.resume:
         t = tlast
+        dtparams = [ p for p in clargs.params if p.startswith('dt=') ]
+        if (dtparams):          # there was an explicit dt param
+            dt = float(dtparams[0][3:])
+        elif 'dt' in cpf.info:
+            dt = float(cpf.info['dt'][()])
+        elif len(cpf.sorted_times()) >= 2:
+            dt = tlast - cpf.sort_times()[-2]
+        else:
+            pass                  # leave default dt unchanged.
     else:
         t = ps.t0
     #
