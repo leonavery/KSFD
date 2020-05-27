@@ -7,6 +7,7 @@ expressions.
 import keyword
 import re
 import sympy as sy
+from numbers import Number
 import numpy as np
 import uuid, os, tempfile
 import collections
@@ -56,15 +57,16 @@ def safe_sympify(exp):
     Does what sympify does, except that it checks the string for
     reserved keywords and raises an exception if there are any.
     """
-    wordre = r'\b\w+\b'
-    words = re.finditer(wordre, exp)
-    for word in words:
-        if word.group() in keyword.kwlist:
-            raise ValueError(
-                'expression contains keyword {kw}'.format(
-                    kw=word.group()
+    if isinstance(exp, str):
+        wordre = r'\b\w+\b'
+        words = re.finditer(wordre, exp)
+        for word in words:
+            if word.group() in keyword.kwlist:
+                raise ValueError(
+                    'expression contains keyword {kw}'.format(
+                        kw=word.group()
+                    )
                 )
-            )
     return sy.sympify(exp)
 
 def cartesian_product(*arrays, order='F'):
@@ -1459,8 +1461,7 @@ class SpatialExpression:
 
     @expression.setter
     def expression(self, exp):
-        if isinstance(exp, str):
-            exp = safe_sympify(exp)
+        exp = safe_sympify(exp)
         self._expression = exp.subs(
             self.ps.time_dependent_symbols()
         )
