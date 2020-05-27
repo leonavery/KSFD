@@ -56,6 +56,9 @@ def safe_sympify(exp):
     """
     Does what sympify does, except that it checks the string for
     reserved keywords and raises an exception if there are any.
+
+    sympify itself raises an exception in this case, but the message
+    is not informative -- it merely reports a syntax error.
     """
     if isinstance(exp, str):
         wordre = r'\b\w+\b'
