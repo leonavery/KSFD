@@ -342,7 +342,7 @@ def main(*args):
     v0a = vec0.array.reshape(grid.Vlshape, order='F')
     lvec0 = grid.Vdmda.createLocalVec()
     derivs = Derivatives(ps, grid, sources=sources, u0=vec0)
-    UJacobian_arrays = derivs.UJacobian_arrays(t=ps.t0)
+    # UJacobian_arrays = derivs.UJacobian_arrays(t=ps.t0)
     grid.Vdmda.globalToLocal(vec0, lvec0)
     lv0a = lvec0.array.reshape(grid.Vashape, order='F')
     logMAIN('lv0a[:]', lv0a[:])

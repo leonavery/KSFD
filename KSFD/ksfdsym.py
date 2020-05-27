@@ -4,6 +4,8 @@
 Functions and classes for manipulation and evaluation of symbolic
 expressions.
 """
+import keyword
+import re
 import sympy as sy
 import numpy as np
 import uuid, os, tempfile
@@ -49,6 +51,22 @@ else:
 def logSYM(*args, **kwargs):
     log(*args, system='SYM', **kwargs)
 
+def safe_sympify(exp):
+    """
+    Does what sympify does, except that it checks the string for
+    reserved keywords and raises an exception if there are any.
+    """
+    wordre = r'\b\w+\b'
+    words = re.finditer(wordre, exp)
+    for word in words:
+        if word.group() in keyword.kwlist:
+            raise ValueError(
+                'expression contains keyword {kw}'.format(
+                    kw=word.group()
+                )
+            )
+    return sy.sympify(exp)
+
 def cartesian_product(*arrays, order='F'):
     ndim = len(arrays)
     out = np.stack(np.meshgrid(*arrays), axis=-1).reshape(-1, ndim)
@@ -93,7 +111,7 @@ def spatial_expression(
     params. It should be something that sympy can evaluate to a float
     when numeric values are given for all free symbols.
     """
-    sexpr = sy.sympify(expr).subs(params)
+    sexpr = safe_sympify(expr).subs(params)
     dim = grid.dim
     xnames = sy.symbols('x y z')[:dim]
     if not sexpr.free_symbols.issubset(xnames):
@@ -1442,7 +1460,7 @@ class SpatialExpression:
     @expression.setter
     def expression(self, exp):
         if isinstance(exp, str):
-            exp = sy.sympify(exp)
+            exp = safe_sympify(exp)
         self._expression = exp.subs(
             self.ps.time_dependent_symbols()
         )

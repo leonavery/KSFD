@@ -53,6 +53,7 @@ __all__ = [
     'UfuncifyCodeWrapperMultiple',
     'ufuncify',
     'Grid',
+    'safe_sympify',
     'cartesian_product',
     'spatial_expression',
     'StencilUfunc',

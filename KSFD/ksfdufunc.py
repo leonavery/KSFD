@@ -15,8 +15,10 @@ from warnings import warn
 from mpi4py import MPI
 try:
     from .ksfddebug import log
+    # from .ksfdsym import safe_sympify
 except ImportError:
     from ksfddebug import log
+    # from ksfdsym import safe_sympify
 
 def logUFUNC(*args, **kwargs):
     log(*args, system='UFUNC', **kwargs)
@@ -368,3 +370,4 @@ def ufuncify(
     )
     ufunc = wrapper.wrap_code([routine])
     return ufunc
+
