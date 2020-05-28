@@ -294,6 +294,10 @@ class KSFDTS(petsc4py.PETSc.TS):
                 self.timeseries.reopen()
             u.assemble()         # just to be safe
             self.timeseries.store(u, t, k=k)
+            h = ts.getTimeStep()
+            dt = self.timeseries.info.require_dataset('dt', shape=(),
+                                                      dtype=float)
+            dt[()] = h
             self.timeseries.temp_close()
 
         return (saveMonitor, closeSaveMonitor)

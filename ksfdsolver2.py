@@ -335,6 +335,7 @@ def main(*args):
         tseries.info['SolutionParameters'] = dill.dumps(ps, recurse=True,
                                                         protocol=0)
         tseries.info['sources'] = dill.dumps(sources, protocol=0)
+        tseries.info['dt'] = ps.params0['dt']
         tseries.flush()
     else:
         tseries = None

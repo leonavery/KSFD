@@ -105,7 +105,6 @@ class KSFDTimeSeries:
         self.try_to_set('rank', self.rank)
         #
         # info is a place for caller to store stuff
-        self._info = self.tsf.require_group('/info')
         if 'times' in self.tsf:
             self.ts = np.array(self.tsf['times'][()])
             try:
@@ -285,6 +284,8 @@ class KSFDTimeSeries:
     @property
     def info(self):
         """Place for caller to store extra stuff"""
+        if not hasattr(self, '_info') or not self._info:
+            self._info = self.tsf.require_group('/info')
         return self._info
 
     @property
