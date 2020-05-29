@@ -101,10 +101,9 @@ class KSFDTimeSeries:
         self._size = size
         self._rank = rank
         self._mode = mode
+        info = self.info        # make sure '/info' exists
         self.try_to_set('size', self.size)
         self.try_to_set('rank', self.rank)
-        #
-        # info is a place for caller to store stuff
         if 'times' in self.tsf:
             self.ts = np.array(self.tsf['times'][()])
             try:
@@ -281,6 +280,8 @@ class KSFDTimeSeries:
         )
         self.set_grid(grid)
 
+    #
+    # info is a place for caller to store stuff
     @property
     def info(self):
         """Place for caller to store extra stuff"""
