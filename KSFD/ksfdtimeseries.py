@@ -101,7 +101,7 @@ class KSFDTimeSeries:
         self._size = size
         self._rank = rank
         self._mode = mode
-        info = self.info        # make sure '/info' exists
+        _ = self.info           # make sure '/info' exists
         self.try_to_set('size', self.size)
         self.try_to_set('rank', self.rank)
         if 'times' in self.tsf:

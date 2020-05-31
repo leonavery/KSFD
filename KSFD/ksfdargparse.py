@@ -20,6 +20,7 @@ default_parameters = [
     ('width', 1.0, 'width of spatial domain'),
     ('height', 1.0, 'height of spatial domain'),
     ('depth', 1.0, 'depth of spatial domain'),
+    ('CFL_safety_factor', 0.0, 'CFL upper bound on timestep'),
     ('Umin', 1e-7, 'minimum allowed value of U'),
     ('rhomin', 1e-7, 'minimum allowed value of rho'),
     ('rhomax', 28000, 'approximate max value of rho'),

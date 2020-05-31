@@ -959,8 +959,12 @@ class Derivatives:
 
     def make_drhodt_exp(self):
         drgG = self.divergence('rho', 'G')
-        Gsubs = {}
-        for sym in drgG.free_symbols:
+        drgG = drgG.subs(self.Gsubs(drgG))
+        return drgG
+
+    def Gsubs(self, exp):
+        subs = {}
+        for sym in exp.free_symbols:
             name = str(sym)
             if not name.startswith('_s_G_'): continue
             n = name[5:]
@@ -969,9 +973,8 @@ class Derivatives:
                 for lig in self.ps.Vgroups.ligands()
             ]
             rho = sy.Symbol('_s_rho_{n}'.format(n=n))
-            Gsubs[sym] = self.G(Us, rho)
-        drgG = drgG.subs(Gsubs)
-        return drgG
+            subs[sym] = self.G(Us, rho)
+        return(subs)
 
     def drhodt_ufuncs(self):
         """
@@ -1094,8 +1097,58 @@ class Derivatives:
                 ufuncsout.append(sum)
                 if success: break
         return ufuncsout
-        
 
+    @property
+    def velocity_exp(self):
+        if not getattr(self, '_vel_exp', None):
+            self._vel_exp = self.make_vel_exp()
+        return self._vel_exp
+
+    def make_vel_exp(self):
+        vel = self.grad('G')
+        vel = vel.subs(self.Gsubs(vel))
+        return vel
+
+    @property
+    def vel_ufuncs(self):
+        """
+        Compute StencilUfuncs to compute velocity
+
+        Returns a list of StencilUfuncs to compute the  componets of
+        the velocity. The list of length dim. The first StencilUfunc
+        computes the x component of velocity, the second the y
+        bomponet, etc.
+        """
+        if not getattr(self, '_vel_ufuncs', None):
+            vel_exp = self.velocity_exp
+            vel_sufs = [
+                StencilUfunc(self, expressions=veli)
+                for veli in vel_exp
+            ]
+            self._vel_ufuncs = vel_sufs
+        return self._vel_ufuncs
+
+    def velocity(self, fvec, t=None, out=None):
+        """
+        Return velocities.
+
+        Returns an ndarray of shape (dim,) + self.grid.Slshape
+        containing components of velocity at each point.
+        """
+        if not isinstance(out, np.ndarray):
+            out = np.ndarray(
+                shape=(self.dim,) + self.grid.Slshape,
+                dtype=float
+            )
+        fvec.assemble()         # just to be safe
+        fva = fvec.array.reshape(self.grid.Vlshape, order='F')
+        lfvec = self.grid.Vdmda.getLocalVec()
+        self.grid.Vdmda.globalToLocal(fvec, lfvec)
+        farr = lfvec.array.reshape(self.grid.Vashape, order='F')
+        for d,suf in enumerate(self.vel_ufuncs):
+            suf(farr, t=t, out=out[d])
+        return out
+    
 class StencilUfunc:
     """
     StencilUfunc -- ufunc that operates on stencil values

@@ -132,6 +132,7 @@ class KSFDTS(petsc4py.PETSc.TS):
         self.setTolerances(atol=atol, rtol=rtol)
         self.setType(tstype)
         self.history = []
+        self.CFL_maxh = self.CFL_step(derivs.u0)
         self.kJ = self.derivs.Jacobian(derivs.u0)
         self.u = self.derivs.u0.duplicate()
         self.u.setUp()
@@ -165,6 +166,7 @@ class KSFDTS(petsc4py.PETSc.TS):
         kmax = self.getMaxSteps()
         k = self.getStepNumber()
         h = self.getTimeStep()
+        self.CFL_check()
         t = self.getTime()
         lastu = u.duplicate()
         lastu.setUp()
@@ -181,12 +183,43 @@ class KSFDTS(petsc4py.PETSc.TS):
             # gc.collect()
             k = self.getStepNumber()
             h = self.getTimeStep()
+            self.CFL_check()
             t = self.getTime()
             u = self.getSolution()
             solvec = self.u.array
             logTS('solvec - lastu.array', solvec - lastu.array)
             logTS('np.min(solvec)', np.min(solvec))
             self.monitor(k, t, u)
+
+    def CFL_check(self):
+        h = self.getTimeStep()
+        t = self.getTime()
+        u = self.getSolution()
+        self.CFL_maxh = self.CFL_step(u, t)
+        logTS('h, self.CFL_maxh', h, self.CFL_maxh)
+        safety = self.derivs.ps.params0['CFL_safety_factor']
+        if (safety > 0.0):
+            maxh = safety * self.CFL_maxh
+            if h > maxh:
+                logTS('CFL step exceeded, truncating to', maxh)
+                h = maxh
+                self.setTimeStep(h)
+        return
+        
+    def CFL_step(self, u, t=None):
+        if hasattr(self, 'velocity'):
+            self.derivs.velocity(u, t=t, out=self.velocity)
+        else:
+            self.velocity = self.derivs.velocity(u, t=t)
+        vmaxs = [
+            np.max(np.abs(veld)) for veld in self.velocity
+        ]
+        sw = self.derivs.grid.stencil_width
+        hmaxs = [
+            s*sw/self.mpi_comm.allreduce(v, MPI.MAX)
+            for v,s in zip(vmaxs, self.derivs.grid.spacing)
+        ]
+        return np.min(hmaxs)
 
     def cleanup(self):
         """Should be called when finished with a TS
