@@ -70,10 +70,10 @@ def main():
         files = np.append(files, np.full_like(st, f, dtype=int))
         g.close()
     out = TimeSeries(clargs.outfile, grid, comm=MPI.COMM_SELF, mode='w')
-    order = times.argsort()
-    files = files[order]
-    steps = steps[order]
-    times = times[order]
+    # order = times.argsort()
+    # files = files[order]
+    # steps = steps[order]
+    # times = times[order]
     k = 0
     del out.tsf['/info']
     for f,name in enumerate(clargs.infiles):
@@ -81,7 +81,9 @@ def main():
             print('collecting data from {name}'.format(name=name),
                   flush=True)
         fmatch = files == f
-        forder = order[fmatch]
+        # forder = order[fmatch]
+        fsteps = steps[fmatch]
+        ftimes = times[fmatch]
         g = Gatherer(name)
         if '/info' not in out.tsf:
             g.tsf.copy(
@@ -93,9 +95,7 @@ def main():
         for s in g:
             if clargs.verbose > 0:
                 print(str(s.tsf), flush=True)
-            for point in forder:
-                k = steps[point]
-                t = times[point]
+            for k,t in zip(fsteps,ftimes):
                 vals = s.retrieve_by_number(k)
                 if clargs.verbose > 1:
                     print('point {k}, time {t}'.format(k=k, t=t),
