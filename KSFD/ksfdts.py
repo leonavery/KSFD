@@ -245,6 +245,8 @@ class KSFDTS(petsc4py.PETSc.TS):
                 out = "clock: %s, step %3d t=%8.3g h=%8.3g" % (
                           datetime.now().strftime('%H:%M:%S'), k, t, h
                        )
+            if hasattr(self, 'CFL_maxh'):
+                out += ' CFL=%8.3g'%(self.CFL_maxh)
             print(out, flush=True)
             self.lastt = t
 
