@@ -45,7 +45,10 @@ else:
     )
 
 from sympy.core.cache import cacheit
-from sympy.core.compatibility import range, iterable
+try:                            # sympy 1.5 needed this: 1.6 barfs on it
+    from sympy.core.compatibility import range, iterable
+except ImportError:
+    pass
 from sympy.core.function import Lambda
 from sympy.core.relational import Eq
 from sympy.core.symbol import Dummy, Symbol
