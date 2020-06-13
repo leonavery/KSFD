@@ -757,15 +757,19 @@ class Derivatives:
         a numpy array of shape self.grid.Slshape whose values are the
         time derivatives of rho at each point.
         """
-        fvec.assemble()         # just to be safe
-        fva = fvec.array.reshape(self.grid.Vlshape, order='F')
-        lfvec = self.grid.Vdmda.getLocalVec()
-        self.grid.Vdmda.globalToLocal(fvec, lfvec)
-        farr = lfvec.array.reshape(self.grid.Vashape, order='F')
+        if isinstance(fvec, petsc4py.PETSc.Vec):
+            fvec.assemble()         # just to be safe
+            fva = fvec.array.reshape(self.grid.Vlshape, order='F')
+            lfvec = self.grid.Vdmda.getLocalVec()
+            self.grid.Vdmda.globalToLocal(fvec, lfvec)
+            farr = lfvec.array.reshape(self.grid.Vashape, order='F')
+        elif isinstance(fvec, np.ndarray):
+            farr = fvec
         drhodtva = self.drhodt_ufs[0](farr)
         for uf in self.drhodt_ufs[1:]:
             drhodtva += uf(farr)
-        self.grid.Vdmda.restoreLocalVec(lfvec)
+        if isinstance(fvec, petsc4py.PETSc.Vec):
+            self.grid.Vdmda.restoreLocalVec(lfvec)
         return drhodtva
 
     def Jacobian(self, fvec, t=None, out=None, cache=True):
@@ -864,13 +868,17 @@ class Derivatives:
         farr = lfvec.array.reshape(self.grid.Vashape, order='F')
         rhomin = self.ps.params0['rhomin']
         farr[0] = np.maximum(farr[0], rhomin) # don't take logs of <=0
+        for lm1,Uuf in enumerate(self.dUdt_ufs):
+            fnum = lm1 + 1
+            Umin = self.ps.params0['Umin']
+            farr[fnum] = np.maximum(farr[fnum], Umin)
         if out is None:
             dfdt = self.grid.Vdmda.createGlobalVec()
         else:
             dfdt = out
         dfdt.assemble()
         dfdtarray = dfdt.array.reshape(self.grid.Vlshape, order='F')
-        dfdtarray[0] = self.drhodt(fvec, t=t)
+        dfdtarray[0] = self.drhodt(farr, t=t)
         src = self.sources[0](t)
         dfdtarray[0] += src
         for lm1,Uuf in enumerate(self.dUdt_ufs):
@@ -1145,6 +1153,12 @@ class Derivatives:
         lfvec = self.grid.Vdmda.getLocalVec()
         self.grid.Vdmda.globalToLocal(fvec, lfvec)
         farr = lfvec.array.reshape(self.grid.Vashape, order='F')
+        rhomin = self.ps.params0['rhomin']
+        farr[0] = np.maximum(farr[0], rhomin) # don't take logs of <=0
+        for lm1,Uuf in enumerate(self.dUdt_ufs):
+            fnum = lm1 + 1
+            Umin = self.ps.params0['Umin']
+            farr[fnum] = np.maximum(farr[fnum], Umin)
         for d,suf in enumerate(self.vel_ufuncs):
             suf(farr, t=t, out=out[d])
         return out
