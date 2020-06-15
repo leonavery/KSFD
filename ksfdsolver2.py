@@ -271,7 +271,11 @@ def start_values(clargs, grid, ps):
     U0names = ['U0' + lig.name()[1:] for lig in ps.groups.ligands()]
     for dof, lig in enumerate(ps.groups.ligands()):
         name = 'U0' + lig.name()[1:]
-        if name in ps.params0 and ps.params0[name] is not None:
+        if (
+            name in ps.params0 and
+            ps.params0[name] is not None and
+            ps.params0[name] != ''
+        ):
             U0 = SpatialExpression(ps, grid, ps.params0[name])(
                 out=(va[dof+1],)
             )
