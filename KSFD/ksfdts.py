@@ -179,6 +179,7 @@ class KSFDTS(petsc4py.PETSc.TS):
             lastk, lasth, lastt = k, h, t
             u.copy(lastu)
             lastu.assemble()
+            u = self.groom(u)
             super().step()
             # gc.collect()
             k = self.getStepNumber()
@@ -190,6 +191,15 @@ class KSFDTS(petsc4py.PETSc.TS):
             logTS('solvec - lastu.array', solvec - lastu.array)
             logTS('np.min(solvec)', np.min(solvec))
             self.monitor(k, t, u)
+
+    def groom(self, u):
+        """Get rid of negatives and nans"""
+        u.assemble()         # just to be safe
+        fva = u.array.reshape(self.derivs.grid.Vlshape, order='F')
+        fva = self.derivs.groom(fva)
+        u.assemble()
+        return u
+        
 
     def CFL_check(self):
         h = self.getTimeStep()

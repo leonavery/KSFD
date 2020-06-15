@@ -681,6 +681,7 @@ class Derivatives:
         lfvec = self.grid.Vdmda.getLocalVec()
         self.grid.Vdmda.globalToLocal(fvec, lfvec)
         farr = lfvec.array.reshape(self.grid.Vashape, order='F')
+        farr = self.groom(farr)
         #
         # Build list of nonzero Jacobian elements (by stencil)
         #
@@ -846,6 +847,16 @@ class Derivatives:
         )
         return kJ
 
+    def groom(self, farr):
+        """Get rid of negatives and nans"""
+        rhomin = self.ps.params0['rhomin']
+        farr[0] = np.maximum(farr[0], rhomin) # don't take logs of <=0
+        farr[0][np.isnan(farr[0])] = rhomin
+        Umin = self.ps.params0['Umin']
+        farr[1:] = np.maximum(farr[1:], Umin)
+        farr[1:][np.isnan(farr[1:])] = Umin
+        return farr
+
     def dfdt(self, fvec, t=None, out=None):
         """
         Compute time derivative of field vector
@@ -866,12 +877,7 @@ class Derivatives:
         lfvec = self.grid.Vdmda.getLocalVec()
         self.grid.Vdmda.globalToLocal(fvec, lfvec)
         farr = lfvec.array.reshape(self.grid.Vashape, order='F')
-        rhomin = self.ps.params0['rhomin']
-        farr[0] = np.maximum(farr[0], rhomin) # don't take logs of <=0
-        for lm1,Uuf in enumerate(self.dUdt_ufs):
-            fnum = lm1 + 1
-            Umin = self.ps.params0['Umin']
-            farr[fnum] = np.maximum(farr[fnum], Umin)
+        farr = self.groom(farr)
         if out is None:
             dfdt = self.grid.Vdmda.createGlobalVec()
         else:
@@ -1153,12 +1159,7 @@ class Derivatives:
         lfvec = self.grid.Vdmda.getLocalVec()
         self.grid.Vdmda.globalToLocal(fvec, lfvec)
         farr = lfvec.array.reshape(self.grid.Vashape, order='F')
-        rhomin = self.ps.params0['rhomin']
-        farr[0] = np.maximum(farr[0], rhomin) # don't take logs of <=0
-        for lm1,Uuf in enumerate(self.dUdt_ufs):
-            fnum = lm1 + 1
-            Umin = self.ps.params0['Umin']
-            farr[fnum] = np.maximum(farr[fnum], Umin)
+        farr = self.groom(farr)
         for d,suf in enumerate(self.vel_ufuncs):
             suf(farr, t=t, out=out[d])
         return out
