@@ -403,8 +403,11 @@ class KSFDTimeSeries:
         self.ks = np.append(self.ks, k)
         self.ts = np.append(self.ts, t)
         key = 'data' + str(k)
-        dset = self.tsf.create_dataset(key, self.grid.Vlshape,
-                                       dtype=vals.dtype)
+        try:
+            dset = self.tsf.create_dataset(key, self.grid.Vlshape,
+                                           dtype=vals.dtype)
+        except OSError:
+            dset = self.tsf[key]     # dset already exists
         Cvals = vals.copy(order='C') # h5py requires C order
         if self.rank_owns_file:
             dset.write_direct(Cvals)
