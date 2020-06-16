@@ -850,9 +850,13 @@ class Derivatives:
     def groom(self, farr):
         """Get rid of negatives and nans"""
         rhomin = self.ps.params0['rhomin']
+        logSYM('np.min(farr[0]), np.sum(farr[0] < 0.0)',
+               np.min(farr[0]), np.sum(farr[0] < 0.0))
         farr[0] = np.maximum(farr[0], rhomin) # don't take logs of <=0
         farr[0][np.isnan(farr[0])] = rhomin
         Umin = self.ps.params0['Umin']
+        logSYM('np.min(farr[1:]), np.sum(farr[1:] < 0.0)',
+               np.min(farr[1:]), np.sum(farr[1:] < 0.0))
         farr[1:] = np.maximum(farr[1:], Umin)
         farr[1:][np.isnan(farr[1:])] = Umin
         return farr
