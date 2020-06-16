@@ -13,11 +13,13 @@ try:
     from .ksfdtimeseries import TimeSeries
     from .ksfdmat import getMat
     from .ksfdsym import MPIINT, PetscInt
+    from .ksfdrandom import mpi_sample
 except ImportError:
     from ksfddebug import log
     from ksfdtimeseries import TimeSeries
     from ksfdmat import getMat
     from ksfdsym import MPIINT, PetscInt
+    from ksfdrandom import mpi_sample
 
 def logTS(*args, **kwargs):
     log(*args, system='TS', **kwargs)
@@ -170,6 +172,9 @@ class KSFDTS(petsc4py.PETSc.TS):
         t = self.getTime()
         lastu = u.duplicate()
         lastu.setUp()
+        Nworms = self.count_worms(u)
+        lastvart = t
+        var_interval = self.derivs.ps.params0['variance_interval']
         self.monitor(k, t, u)
         while (
                 (not self.diverged) and
@@ -187,6 +192,12 @@ class KSFDTS(petsc4py.PETSc.TS):
             self.CFL_check()
             t = self.getTime()
             u = self.getSolution()
+            dt = t - lastvart
+            if dt >= var_interval:
+                logTS('injecting variance, t, dt', t, dt)
+                u = self.add_variance(u, dt)
+                u = self.conserve_worms(u, Nworms)
+                lastvart = t
             solvec = self.u.array
             logTS('solvec - lastu.array', solvec - lastu.array)
             logTS('np.min(solvec)', np.min(solvec))
@@ -197,6 +208,45 @@ class KSFDTS(petsc4py.PETSc.TS):
         u.assemble()         # just to be safe
         fva = u.array.reshape(self.derivs.grid.Vlshape, order='F')
         fva = self.derivs.groom(fva)
+        u.assemble()
+        return u
+
+    def count_worms(self, u):
+        """Returns total of all rho values"""
+        u.assemble()
+        fva = u.array.reshape(self.derivs.grid.Vlshape, order='F')
+        nworms = np.sum(fva[0])
+        Nworms = self.mpi_comm.allreduce(nworms, MPI.SUM)
+        logTS('count_worms', Nworms)
+        return Nworms
+
+    def conserve_worms(self, u, Nworms):
+        u.assemble()
+        fva = u.array.reshape(self.derivs.grid.Vlshape, order='F')
+        nworms = np.sum(fva[0])
+        correction = Nworms/self.mpi_comm.allreduce(nworms, MPI.SUM)
+        logTS('Nworms, correction', Nworms, correction)
+        fva[0] *= correction
+        u.assemble()
+        return u
+
+
+    def add_variance(self, u, dt):
+        """Add variance if variance_rate set"""
+        vrate = self.derivs.ps.params0['variance_rate']
+        if not vrate or vrate <= 0.0:
+            return u
+        u.assemble()         # just to be safe
+        fva = u.array.reshape(self.derivs.grid.Vlshape, order='F')
+        rho = fva[0]
+        sd = np.sqrt(vrate * dt)
+        stn_sample = mpi_sample(
+            call=(np.random.normal,
+                  [],
+                  dict(size=rho.shape))
+        )
+        logn_sample = np.exp(sd * stn_sample)
+        rho *= logn_sample
         u.assemble()
         return u
         

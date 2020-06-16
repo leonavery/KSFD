@@ -769,8 +769,11 @@ class Derivatives:
         drhodtva = self.drhodt_ufs[0](farr)
         for uf in self.drhodt_ufs[1:]:
             drhodtva += uf(farr)
+        # correction = np.sum(drhodtva)/np.size(drhodtva)
+        # drhodtva -= correction  # kludge to enforce conservation
         if isinstance(fvec, petsc4py.PETSc.Vec):
             self.grid.Vdmda.restoreLocalVec(lfvec)
+        # logSYM('correction, np.sum(drhodtva)', correction, np.sum(drhodtva))
         return drhodtva
 
     def Jacobian(self, fvec, t=None, out=None, cache=True):
@@ -1190,7 +1193,7 @@ class StencilUfunc:
     all the x owned by the local process by passing as arguments array
     slices displaced from center by the appropriate number of grid
     points. Each such displaced array is designated by a stencil
-    array, aleways of length 4, e.g. [-1, 0, 0, 1]. This particular
+    array, always of length 4, e.g. [-1, 0, 0, 1]. This particular
     stencil array specifies points displaced from x by 1 grid spacing
     left in dimensions 0, and with no displacement in other
     dimensions. Elements 1 and 2 are ignored in a one-dimensional
@@ -1207,7 +1210,7 @@ class StencilUfunc:
     derivs.stencil_sym_nums. derivs.stencils is an ndarray whose rows
     are rthe corresponding stencil arrays.
 
-    The ufuncs handle by this class take as arguments stencil arrays,
+    The ufuncs handled by this class take as arguments stencil arrays,
     as detailed above, and time-dependent parameters. They may produce
     multiple outputs.
 
@@ -1215,7 +1218,7 @@ class StencilUfunc:
     expressions: a list of sympy expressions whose values are the
         outputs of the ufunc. This attribute is read/write. 
     inputs: a list a sympy symbols representing the input arguments of
-        the ufunc. These are the free symbols of the expression, order
+        the ufunc. These are the free symbols of the expression, ordered
         so that stencil symbols precede time-dependent parameters.
     nargs: Number of arguments. This is just len(expression) +
         len(inputs)
