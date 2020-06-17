@@ -501,16 +501,16 @@ class KSFDTimeSeries:
             a = len(self.sts) - 1
             return (self.ks[a], self.ks[a], self.sts[a], self.sts[a])
         else:
-            a = self.sts.searchsorted(t)
-        na = self.order[a]
-        ta = self.sts[a]
-        if (a >= len(self.order) - 1):
-            return(a, a, self.sts[a], self.sts[a])
-        elif ta == t:
-            return(a, a, ta, ta)
-        b = a + 1
+            b = self.sts.searchsorted(t)
         nb = self.order[b]
         tb = self.sts[b]
+        if (b >= len(self.order) - 1):
+            return(b, b, self.sts[b], self.sts[b])
+        elif tb == t:
+            return(b, b, tb, tb)
+        a = b - 1
+        na = self.order[a]
+        ta = self.sts[a]
         return (a, b, ta, tb)
 
     def retrieve_by_time(self, t):
