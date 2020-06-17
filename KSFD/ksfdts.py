@@ -175,6 +175,9 @@ class KSFDTS(petsc4py.PETSc.TS):
         Nworms = self.count_worms(u)
         lastvart = t
         var_interval = self.derivs.ps.params0['variance_interval']
+        conserve_worms = self.derivs.ps.params0['conserve_worms']
+        conserve_worms = (False if conserve_worms == 'False' 
+                          else bool(conserve_worms))
         self.monitor(k, t, u)
         while (
                 (not self.diverged) and
@@ -196,7 +199,8 @@ class KSFDTS(petsc4py.PETSc.TS):
             if dt >= var_interval:
                 logTS('injecting variance, t, dt', t, dt)
                 u = self.add_variance(u, dt)
-                u = self.conserve_worms(u, Nworms)
+                if conserve_worms:
+                    u = self.conserve_worms(u, Nworms)
                 lastvart = t
             solvec = self.u.array
             logTS('solvec - lastu.array', solvec - lastu.array)

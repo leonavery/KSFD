@@ -21,6 +21,7 @@ default_parameters = [
     ('height', 1.0, 'height of spatial domain'),
     ('depth', 1.0, 'depth of spatial domain'),
     ('CFL_safety_factor', 0.0, 'CFL upper bound on timestep'),
+    ('conserve_worms', '', 'enforce conservation of worms'),
     ('variance_rate', 0.0, 'rate of increase in random rho variance'),
     ('variance_interval', 100.0, 'fequency of increase in random rho variance'),
     ('Umin', 1e-7, 'minimum allowed value of U'),
