@@ -410,13 +410,16 @@ class Grid:
         dmda.setUp()
         return dmda
 
-    def stencil_slice(self, stencil, array, requireF=True):
+    def stencil_slice(self, stencil, array, G=None, requireF=True):
         if not isinstance(array, np.ndarray):
             array = array.array
         assert (not requireF) or array.flags['F_CONTIGUOUS']
         assert isinstance(array, np.ndarray) and (
             array.shape == self.Sashape or
             array.shape == self.Vashape
+        )
+        assert G is None or (
+            isinstance(G, np.ndarray) and G.shape == self.Sashape
         )
         sw = self.stencil_width
         slices = [slice(0, None)] * self.dim
@@ -425,9 +428,10 @@ class Grid:
                 stencil[i] + sw,
                 stencil[i] + sw + self.Slshape[i]
             )
-        if array.ndim > self.dim:
+        outarray = array if stencil[-1] != -1 else G
+        if outarray.ndim > self.dim:
             slices[:0] = [stencil[-1]]
-        return array[tuple(slices)]
+        return outarray[tuple(slices)]
 
     #
     # Pickling: The assumption behind these pickling functions is that

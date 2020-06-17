@@ -183,7 +183,7 @@ class Derivatives:
             self.stencils = np.append(self.stencils, sts, axis=0)
             self.xcoords = np.append(self.xcoords, xcs, axis=0)
         ssubs, sts, xcs = self.field_stencil_symbols('G')
-        sts[:, -1] = -1
+        sts[:, -1] = -1         # dof -1 is reserved for G
         self.stencil_subs.update(ssubs)
         self.stencils = np.append(self.stencils, sts, axis=0)
         self.xcoords = np.append(self.xcoords, xcs, axis=0)
@@ -766,14 +766,27 @@ class Derivatives:
             farr = lfvec.array.reshape(self.grid.Vashape, order='F')
         elif isinstance(fvec, np.ndarray):
             farr = fvec
-        drhodtva = self.drhodt_ufs[0](farr)
-        for uf in self.drhodt_ufs[1:]:
-            drhodtva += uf(farr)
-        # correction = np.sum(drhodtva)/np.size(drhodtva)
-        # drhodtva -= correction  # kludge to enforce conservation
-        if isinstance(fvec, petsc4py.PETSc.Vec):
-            self.grid.Vdmda.restoreLocalVec(lfvec)
-        # logSYM('correction, np.sum(drhodtva)', correction, np.sum(drhodtva))
+        #
+        # This is a special case: works because self.Guf references only the
+        # central point of the stencil.
+        #
+        if t is None:
+            t = self.derivs.ps.t0
+        pvalues = self.ps.values(t)
+        ufargs = [
+            farr[stencil[-1]] for stencil in self.Guf.stencils
+        ]
+        for arg in self.Guf.inputs[len(self.Guf.stencils):]:
+            ufargs.append(pvalues[arg])
+        self.Garr = self.Guf.ufunc(*ufargs)
+        drhodtva = self.divrhogradGuf(farr, G=self.Garr)
+        # for uf in self.drhodt_ufs[1:]:
+        #     drhodtva += uf(farr)
+        # # correction = np.sum(drhodtva)/np.size(drhodtva)
+        # # drhodtva -= correction  # kludge to enforce conservation
+        # if isinstance(fvec, petsc4py.PETSc.Vec):
+        #     self.grid.Vdmda.restoreLocalVec(lfvec)
+        # # logSYM('correction, np.sum(drhodtva)', correction, np.sum(drhodtva))
         return drhodtva
 
     def Jacobian(self, fvec, t=None, out=None, cache=True):
@@ -1348,16 +1361,18 @@ class StencilUfunc:
         self,
         array,
         t=None,
+        G=None,
         out=None,
         where=True,
         **kwargs
     ):
-        return self.call(array, t=t, out=out, where=where, **kwargs)
+        return self.call(array, t=t, G=G, out=out, where=where, **kwargs)
 
     def call(
         self,
         array,
         t=None,
+        G=None,
         out=None,
         where=True,
         **kwargs
@@ -1372,11 +1387,12 @@ class StencilUfunc:
 
         Optional keyword arguments:
         t=self.ps.t0: The time at which the ufunc is to be evaluated.
+        G=None: The array of G values, if it is needed. 
         out=None, where=True, **kwargs. These have the usual meanings
             for ufuncs.
 
         Stencil symbols are looked up and array sliced so as to
-            provide a (typically) off-centered slice, sontaining ghost
+            provide a (typically) off-centered slice, containing ghost
             values at the edges. In this way a ufunc is able to
             compute a combination of stencil values for every point in
             the grid in parallel. ps.values(t) is used to get the
@@ -1386,7 +1402,7 @@ class StencilUfunc:
             t = self.derivs.ps.t0
         pvalues = self.derivs.ps.values(t)
         ufargs = [
-            self.derivs.grid.stencil_slice(stencil, array)
+            self.derivs.grid.stencil_slice(stencil, array, G=G)
             for stencil in self.stencils
         ]
         for arg in self.inputs[len(self.stencils):]:
