@@ -17,7 +17,7 @@ from KSFD import (KSFDException, Grid, TimeSeries, random_function,
                   LigandGroups, ParameterList, Parser,
                   default_parameters, SolutionParameters,
                   SpatialExpression, Derivatives, implicitTS,
-                  mpi_sample)
+                  Generator)
 from KSFD.ksfddebug import log
 import KSFD
 
@@ -248,11 +248,8 @@ def start_values(clargs, grid, ps):
             out=(rva,)
         )
         rvals.assemble()
-        stn_sample = mpi_sample( # standard normal sample
-            call=(np.random.normal,
-                  [],
-                  dict(size=rva.shape))
-        )
+        rng = Generator.get_rng()
+        stn_sample = rng.normal(size=rva.shape)
         rva *= stn_sample
         rva += murho0
     rvals.assemble()
@@ -308,7 +305,7 @@ def main(*args):
     ps = SolutionParameters(commandlineArguments)
     logMAIN('list(ps.groups.ligands())',
             list(ps.groups.ligands()))
-    np.random.seed(commandlineArguments.seed)
+    kgen = Generator(seed=commandlineArguments.seed, comm=comm)
     if (commandlineArguments.showparams):
         for n,p,d,h in ps.params0.params():
             print(

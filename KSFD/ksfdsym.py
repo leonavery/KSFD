@@ -183,7 +183,7 @@ class Derivatives:
             self.stencils = np.append(self.stencils, sts, axis=0)
             self.xcoords = np.append(self.xcoords, xcs, axis=0)
         ssubs, sts, xcs = self.field_stencil_symbols('G')
-        sts[:, -1] = self.ps.nligands + 1
+        sts[:, -1] = -1
         self.stencil_subs.update(ssubs)
         self.stencils = np.append(self.stencils, sts, axis=0)
         self.xcoords = np.append(self.xcoords, xcs, axis=0)

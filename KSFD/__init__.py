@@ -35,7 +35,7 @@ __all__ = [
     'getMat',
     'Parser',
     "KSFDException",
-    "mpi_sample",
+    "Generator",
     "random_function",
     "TimeSeries",
     "remap_from_files",

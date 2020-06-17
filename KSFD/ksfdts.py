@@ -13,13 +13,13 @@ try:
     from .ksfdtimeseries import TimeSeries
     from .ksfdmat import getMat
     from .ksfdsym import MPIINT, PetscInt
-    from .ksfdrandom import mpi_sample
+    from .ksfdrandom import Generator
 except ImportError:
     from ksfddebug import log
     from ksfdtimeseries import TimeSeries
     from ksfdmat import getMat
     from ksfdsym import MPIINT, PetscInt
-    from ksfdrandom import mpi_sample
+    from ksfdrandom import Generator
 
 def logTS(*args, **kwargs):
     log(*args, system='TS', **kwargs)
@@ -244,11 +244,8 @@ class KSFDTS(petsc4py.PETSc.TS):
         fva = u.array.reshape(self.derivs.grid.Vlshape, order='F')
         rho = fva[0]
         sd = np.sqrt(vrate * dt)
-        stn_sample = mpi_sample(
-            call=(np.random.normal,
-                  [],
-                  dict(size=rho.shape))
-        )
+        rng = Generator.get_rng()
+        stn_sample = rng.normal(size=rho.shape)
         logn_sample = np.exp(sd * stn_sample)
         rho *= logn_sample
         u.assemble()

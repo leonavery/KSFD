@@ -1,114 +1,61 @@
 from mpi4py import MPI
 import numpy as np
+from numpy.random import SeedSequence, default_rng
 from scipy.spatial import KDTree
 try:
     from .ksfddebug import log
 except ImportError:
     from ksfddebug import log
-# import numba
 
 def logRANDOM(*args, **kwargs):
     log(*args, system='RANDOM', **kwargs)
 
-_stored_state = None
+class Generator:
+    """KSFDGenerator -- MPI-aware random number generator"""
+    _rng = None
 
-def mpi_sample(
-    call=(np.random.randn, [], {}),
-    seed=None,
-    comm=MPI.COMM_WORLD
-):
-    """Consistent random samples across MPI processes
+    def __init__(self, seed=None, comm=MPI.COMM_WORLD):
+        """Create independent random number generators in parallel
 
-    Optional keyword parameters:
-    call=(np.random.randn, [], {}): call is a tuple of the form
-        (callable, args, kwargs). After setting up the numpy random
-        state, mpi_sample will return the values returned by
-        callable(*args, **kwargs).
-    seed=None: This is either an object acceptable to
-        numpy.random.set_state or an object acceptable to
-        numpy.random.seed.
-    comm=MPI.COMM_WORLD: The MPI communicator.
+        Optional keyword arguments:
+        seed=None: seed the Gnerator to get a reproducible stream.
+        comm=MPI.COMM_WORLD: The MPI communicator
 
-    On the first call, seed is used to seed the numpy.random system in
-    process 0. callable(*args, **kwargs) is then called to get the
-    results to return on process 0, and the state of the numpy.random
-    system is sent to process 1. Process 1 initializes the state from
-    the received state, calls callable(*args, **kwargs), and send the
-    state on to process 2, etc. The last process sends the state back
-    to process 0, where it is stored for use in subsequent call to
-    mpi_sample.
+        Creates an independent np.random.Generator in each MPI process. This
+        generator can be retrived with the __call__ method, e.g.
 
-    Of course, this forces your MPI program to execute
-    sequentially. This is acceptable if you don't expect random number
-    generation to be a big part computationally of what your MPi
-    program does.
-    """
-    global _stored_state
-    rank = comm.rank
-    size = comm.size
-    src = rank - 1 if rank > 0 else size - 1
-    dst = rank + 1 if rank < size - 1 else 0
-    if rank == 0:
-        if seed is not None:
-            # logRANDOM('trying to seed np.random')
-            try:
-                np.random.set_state(seed)
-            except (ValueError, TypeError):
-                np.random.seed(seed)
-        elif _stored_state is not None:
-            # logRANDOM('restoring stored state')
-            np.random.set_state(_stored_state)
-        else:
-            pass                # just leave the system alone
-    else:
-        instate = comm.recv(source=src)
-        # logRANDOM('received state from', src)
-        if isinstance(instate, Exception):
-            # logRANDOM('received Exception from src', src)
-            comm.send(instate, dest=dst)
-            raise instate
-        np.random.set_state(instate)
-    if 1 == len(call):
-        callable = call[0]
-        args = []
-        kwargs = {}
-    elif 2 == len(call):
-        callable, args = call
-        kwargs = {}
-    elif 3 == len(call):
-        callable, args, kwargs = call
-    else:
-        e = ValueError(
-            'call must be a tuple of length 1-3'
-        )
-        comm.send(e, dest=dst)
-        raise e
-    if not args: args = []
-    if not kwargs: kwargs = {}
-    try:
-        ret = callable(*args, **kwargs)
-    except Exception as e:
-        if (dst != rank):
-            # logRANDOM('sending exception to', dst)
-            comm.send(e, dest=dst)
-        raise e
-    outstate = np.random.get_state()
-    if size == 1:               # finished
-        # logRANDOM('mpi_sample returns', ret)
-        _stored_state = outstate
-        return ret
-    comm.send(outstate, dest=dst)
-    # logRANDOM('sent state to', dst)
-    if rank == 0:
-        instate = comm.recv(source=src)
-        _stored_state = instate
-        if isinstance(instate, Exception):
-            _stored_state = outstate
-            # logRANDOM('received Exception from src', src)
-            raise instate
-        # logRANDOM('received state from', src)
-    # logRANDOM('mpi_sample returns', ret)
-    return ret
+        from KSFD import Generator
+        ...
+        kgen = Generator(seed)
+        rng = kgen()
+
+        Also, the class method get_rng() will retrieve the process-wide
+        npp.random.Generator, so that you don't need to carry the Generator
+        instance around with you:
+
+        rng = Generator.get_rng()
+        """
+        if seed is None and self._rng is not None:
+            #
+            # already set -- nothig nto do
+            #
+            return
+        size = comm.size
+        rank = comm.rank
+        ss = SeedSequence(seed)
+        seeds = ss.spawn(size)
+        type(self)._rng = default_rng(seeds[rank])
+        return
+
+    def __call__(self):
+        """Return the np.random.Generator"""
+        return self.get_rng()
+
+    @classmethod
+    def get_rng(cls):
+        if cls._rng is None:
+            gen = cls()
+        return cls._rng
 
 def extended_coords(grid):
     """
@@ -216,14 +163,8 @@ def random_function(
     valsSupplied = bool(vals)
     if not valsSupplied:
         vals = randgrid.Sdmda.createGlobalVec()
-        vals.array = mpi_sample(
-            call = (np.random.normal,
-                    [],
-                    dict(loc=mu, scale=sigma,
-                         size=vals.array.shape)),
-            seed=seed,
-            comm=comm
-        )
+        kgen = Generator(seed=seed, comm=comm)
+        vals.array = kgen().normal(loc=mu, scale=sigma, size=vals.array.shape)
         vals.assemble()
     if (                        # shortcut for when grids match
             np.all(randgrid.nps == grid.nps) and
@@ -276,3 +217,106 @@ def random_function(
     vec.assemble()
     return vec
 
+#
+# Old version: no longer in use, btu kept because the code took some effort.
+#
+
+_stored_state = None
+
+def mpi_sample(
+    call=(np.random.randn, [], {}),
+    seed=None,
+    comm=MPI.COMM_WORLD
+):
+    """Consistent random samples across MPI processes
+
+    Optional keyword parameters:
+    call=(np.random.randn, [], {}): call is a tuple of the form
+        (callable, args, kwargs). After setting up the numpy random
+        state, mpi_sample will return the values returned by
+        callable(*args, **kwargs).
+    seed=None: This is either an object acceptable to
+        numpy.random.set_state or an object acceptable to
+        numpy.random.seed.
+    comm=MPI.COMM_WORLD: The MPI communicator.
+
+    On the first call, seed is used to seed the numpy.random system in
+    process 0. callable(*args, **kwargs) is then called to get the
+    results to return on process 0, and the state of the numpy.random
+    system is sent to process 1. Process 1 initializes the state from
+    the received state, calls callable(*args, **kwargs), and send the
+    state on to process 2, etc. The last process sends the state back
+    to process 0, where it is stored for use in subsequent call to
+    mpi_sample.
+
+    Of course, this forces your MPI program to execute
+    sequentially. This is acceptable if you don't expect random number
+    generation to be a big part computationally of what your MPi
+    program does.
+    """
+    global _stored_state
+    rank = comm.rank
+    size = comm.size
+    src = rank - 1 if rank > 0 else size - 1
+    dst = rank + 1 if rank < size - 1 else 0
+    if rank == 0:
+        if seed is not None:
+            # logRANDOM('trying to seed np.random')
+            try:
+                np.random.set_state(seed)
+            except (ValueError, TypeError):
+                np.random.seed(seed)
+        elif _stored_state is not None:
+            # logRANDOM('restoring stored state')
+            np.random.set_state(_stored_state)
+        else:
+            pass                # just leave the system alone
+    else:
+        instate = comm.recv(source=src)
+        # logRANDOM('received state from', src)
+        if isinstance(instate, Exception):
+            # logRANDOM('received Exception from src', src)
+            comm.send(instate, dest=dst)
+            raise instate
+        np.random.set_state(instate)
+    if 1 == len(call):
+        callable = call[0]
+        args = []
+        kwargs = {}
+    elif 2 == len(call):
+        callable, args = call
+        kwargs = {}
+    elif 3 == len(call):
+        callable, args, kwargs = call
+    else:
+        e = ValueError(
+            'call must be a tuple of length 1-3'
+        )
+        comm.send(e, dest=dst)
+        raise e
+    if not args: args = []
+    if not kwargs: kwargs = {}
+    try:
+        ret = callable(*args, **kwargs)
+    except Exception as e:
+        if (dst != rank):
+            # logRANDOM('sending exception to', dst)
+            comm.send(e, dest=dst)
+        raise e
+    outstate = np.random.get_state()
+    if size == 1:               # finished
+        # logRANDOM('mpi_sample returns', ret)
+        _stored_state = outstate
+        return ret
+    comm.send(outstate, dest=dst)
+    # logRANDOM('sent state to', dst)
+    if rank == 0:
+        instate = comm.recv(source=src)
+        _stored_state = instate
+        if isinstance(instate, Exception):
+            _stored_state = outstate
+            # logRANDOM('received Exception from src', src)
+            raise instate
+        # logRANDOM('received state from', src)
+    # logRANDOM('mpi_sample returns', ret)
+    return ret
