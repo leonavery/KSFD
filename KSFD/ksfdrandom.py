@@ -13,6 +13,7 @@ def logRANDOM(*args, **kwargs):
 class Generator:
     """KSFDGenerator -- MPI-aware random number generator"""
     _rng = None
+    _seeds = None
 
     def __init__(self, seed=None, comm=MPI.COMM_WORLD):
         """Create independent random number generators in parallel
@@ -37,13 +38,14 @@ class Generator:
         """
         if seed is None and self._rng is not None:
             #
-            # already set -- nothig nto do
+            # already set -- nothing to do
             #
             return
         size = comm.size
         rank = comm.rank
         ss = SeedSequence(seed)
         seeds = ss.spawn(size)
+        type(self)._seeds = seeds
         type(self)._rng = default_rng(seeds[rank])
         return
 
