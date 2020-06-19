@@ -192,7 +192,6 @@ class KSFDTS(petsc4py.PETSc.TS):
             # gc.collect()
             k = self.getStepNumber()
             h = self.getTimeStep()
-            self.CFL_check()
             t = self.getTime()
             u = self.getSolution()
             dt = t - lastvart
@@ -202,6 +201,7 @@ class KSFDTS(petsc4py.PETSc.TS):
                 if conserve_worms:
                     u = self.conserve_worms(u, Nworms)
                 lastvart = t
+            self.CFL_check()
             solvec = self.u.array
             logTS('solvec - lastu.array', solvec - lastu.array)
             logTS('np.min(solvec)', np.min(solvec))
