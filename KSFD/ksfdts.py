@@ -12,13 +12,13 @@ try:
     from .ksfddebug import log
     from .ksfdtimeseries import TimeSeries
     from .ksfdmat import getMat
-    from .ksfdsym import MPIINT, PetscInt
+    from .ksfdsym import MPIINT, PetscInt, safe_sympify
     from .ksfdrandom import Generator
 except ImportError:
     from ksfddebug import log
     from ksfdtimeseries import TimeSeries
     from ksfdmat import getMat
-    from ksfdsym import MPIINT, PetscInt
+    from ksfdsym import MPIINT, PetscInt, safe_sympify
     from ksfdrandom import Generator
 
 def logTS(*args, **kwargs):
@@ -195,7 +195,7 @@ class KSFDTS(petsc4py.PETSc.TS):
             t = self.getTime()
             u = self.getSolution()
             dt = t - lastvart
-            if dt >= var_interval:
+            if self.is_noise_time(t, lastvart):
                 logTS('injecting variance, t, dt', t, dt)
                 u = self.add_variance(u, dt)
                 if conserve_worms:
@@ -234,6 +234,20 @@ class KSFDTS(petsc4py.PETSc.TS):
         u.assemble()
         return u
 
+    @property
+    def variance_timing_function(self):
+        if not getattr(self, '_variance_timing_function', None):
+            self._variance_timing_function = safe_sympify(
+                self.derivs.ps.params0['variance_timing_function']
+            )
+        return self._variance_timing_function
+
+    def is_noise_time(self, t, lastvart):
+        vlast = self.derivs.ps.values(lastvart)
+        flast = float(self.variance_timing_function.subs(vlast))
+        vnow = self.derivs.ps.values(t)
+        fnow = float(self.variance_timing_function.subs(vnow))
+        return fnow - flast >= 1.0
 
     def add_variance(self, u, dt):
         """Add variance if variance_rate set"""
