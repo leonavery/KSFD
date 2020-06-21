@@ -174,7 +174,6 @@ class KSFDTS(petsc4py.PETSc.TS):
         lastu.setUp()
         Nworms = self.count_worms(u)
         lastvart = t
-        var_interval = self.derivs.ps.params0['variance_interval']
         conserve_worms = self.derivs.ps.params0['conserve_worms']
         conserve_worms = (False if conserve_worms == 'False' 
                           else bool(conserve_worms))
@@ -196,7 +195,6 @@ class KSFDTS(petsc4py.PETSc.TS):
             u = self.getSolution()
             dt = t - lastvart
             if self.is_noise_time(t, lastvart):
-                logTS('injecting variance, t, dt', t, dt)
                 u = self.add_variance(u, dt)
                 if conserve_worms:
                     u = self.conserve_worms(u, Nworms)
@@ -254,6 +252,7 @@ class KSFDTS(petsc4py.PETSc.TS):
         vrate = self.derivs.ps.params0['variance_rate']
         if not vrate or vrate <= 0.0:
             return u
+        logTS('injecting variance, t, dt', t, dt)
         u.assemble()         # just to be safe
         fva = u.array.reshape(self.derivs.grid.Vlshape, order='F')
         rho = fva[0]
