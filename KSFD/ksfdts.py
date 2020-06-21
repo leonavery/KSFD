@@ -241,6 +241,9 @@ class KSFDTS(petsc4py.PETSc.TS):
         return self._variance_timing_function
 
     def is_noise_time(self, t, lastvart):
+        vrate = self.derivs.ps.params0['variance_rate']
+        if not vrate or vrate <= 0.0:
+            return False
         vlast = self.derivs.ps.values(lastvart)
         flast = float(self.variance_timing_function.subs(vlast))
         vnow = self.derivs.ps.values(t)
