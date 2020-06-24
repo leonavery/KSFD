@@ -255,6 +255,7 @@ class KSFDTS(petsc4py.PETSc.TS):
         vrate = self.derivs.ps.params0['variance_rate']
         if not vrate or vrate <= 0.0:
             return u
+        t = self.getTime()
         logTS('injecting variance, t, dt', t, dt)
         u.assemble()         # just to be safe
         fva = u.array.reshape(self.derivs.grid.Vlshape, order='F')
