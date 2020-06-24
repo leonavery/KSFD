@@ -48,6 +48,10 @@ def main():
                             allow_abbrev=True)
     parser.add_argument('-o', '--outfile',
                         help='merged file basename')
+    parser.add_argument('-s', '--start', type=float, default=0.0,
+                        help='start time')
+    parser.add_argument('-e', '--end', type=float,
+                        help='end time')
     parser.add_argument('infiles', nargs='+', help='files to merge')
     parser.add_argument('-v', '--verbose', action='count')
     clargs = parser.parse_args()
@@ -96,6 +100,8 @@ def main():
             if clargs.verbose > 0:
                 print(str(s.tsf), flush=True)
             for k,t in zip(fsteps,ftimes):
+                if t < clargs.start or (clargs.end and t > clargs.end):
+                    continue
                 vals = s.retrieve_by_number(k)
                 if clargs.verbose > 1:
                     print('point {k}, time {t}'.format(k=k, t=t),
