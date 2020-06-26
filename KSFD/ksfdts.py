@@ -177,6 +177,7 @@ class KSFDTS(petsc4py.PETSc.TS):
             self.lastvart = self.derivs.ps.params0['lastvart']
         else:
             self.lastvart = t
+        logTS('self.lastvart', self.lastvart)
         conserve_worms = self.derivs.ps.params0['conserve_worms']
         conserve_worms = (False if conserve_worms == 'False' 
                           else bool(conserve_worms))
