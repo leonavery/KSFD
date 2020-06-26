@@ -208,6 +208,17 @@ def resume_values(clargs, grid, ps):
             ps.params0['dt'] = tlast - cpf.sort_times()[-2]
         else:
             pass                  # leave default dt unchanged.
+        lastvartparams = [ 
+            p for p in clargs.params if p.startswith('lastvart=') 
+        ]
+        if (lastvartparams):          # there was an explicit lastvart param
+            ps.params0['lastvart'] = float(lastvartparams[0][3:])
+        elif 'lastvart' in cpf.info:
+            ps.params0['lastvart'] = float(cpf.info['lastvart'][()])
+        elif len(cpf.sorted_times()) >= 2:
+            ps.params0['lastvart'] = tlast - cpf.sort_times()[-2]
+        else:
+            pass                  # leave default lastvart unchanged.
     else:
         t = ps.t0
     #

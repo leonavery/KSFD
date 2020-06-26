@@ -173,7 +173,10 @@ class KSFDTS(petsc4py.PETSc.TS):
         lastu = u.duplicate()
         lastu.setUp()
         Nworms = self.count_worms(u)
-        lastvart = t
+        if 'lastvart' in self.derivs.ps.params0:
+            self.lastvart = self.derivs.ps.params0['lastvart']
+        else:
+            self.lastvart = t
         conserve_worms = self.derivs.ps.params0['conserve_worms']
         conserve_worms = (False if conserve_worms == 'False' 
                           else bool(conserve_worms))
@@ -193,12 +196,12 @@ class KSFDTS(petsc4py.PETSc.TS):
             h = self.getTimeStep()
             t = self.getTime()
             u = self.getSolution()
-            dt = t - lastvart
-            if self.is_noise_time(t, lastvart):
+            dt = t - self.lastvart
+            if self.is_noise_time(t, self.lastvart):
                 u = self.add_variance(u, dt)
                 if conserve_worms:
                     u = self.conserve_worms(u, Nworms)
-                lastvart = t
+                self.lastvart = t
             self.CFL_check()
             solvec = self.u.array
             logTS('solvec - lastu.array', solvec - lastu.array)
@@ -360,6 +363,7 @@ class KSFDTS(petsc4py.PETSc.TS):
             protocol=0
         )
         cpf.info['dt'] = h
+        cpf.info['lastvart'] = self.lastvart
         try:
             cpf.info['sources'] = dill.dumps(
                 self.derivs.sources,

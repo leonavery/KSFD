@@ -45,6 +45,7 @@ default_parameters = [
     ('maxsteps', 1000, 'maximum number of time steps'),
     ('t0', 0.0, 'initial time'),
     ('dt', 0.001, 'first time step'),
+    ('lastvart', 0.0, 'last variance injection time'),
     ('tmax', 200000, 'time to simulate'),
     ('rtol', 1e-5, 'relative tolerance for step size adaptation'),
     ('atol', 1e-5, 'absolute tolerance for step size adaptation'),
