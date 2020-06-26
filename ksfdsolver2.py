@@ -197,10 +197,13 @@ def resume_values(clargs, grid, ps):
     resuming = clargs.resume or clargs.restart
     cpf = TimeSeries(resuming, grid=grid, mode='r')
     tlast = cpf.sorted_times()[-1]
+    dtparams = [ p for p in clargs.params if p.startswith('dt=') ]
+    lastvartparams = [ 
+        p for p in clargs.params if p.startswith('lastvart=') 
+    ]
     if clargs.resume:
         t = tlast
-        dtparams = [ p for p in clargs.params if p.startswith('dt=') ]
-        if (dtparams):          # there was an explicit dt param
+        if dtparams:          # there was an explicit dt param
             ps.params0['dt'] = float(dtparams[0][3:])
         elif 'dt' in cpf.info:
             ps.params0['dt'] = float(cpf.info['dt'][()])
@@ -208,10 +211,7 @@ def resume_values(clargs, grid, ps):
             ps.params0['dt'] = tlast - cpf.sort_times()[-2]
         else:
             pass                  # leave default dt unchanged.
-        lastvartparams = [ 
-            p for p in clargs.params if p.startswith('lastvart=') 
-        ]
-        if (lastvartparams):          # there was an explicit lastvart param
+        if lastvartparams:      # there was an explicit lastvart param
             ps.params0['lastvart'] = float(lastvartparams[0][9:])
         elif 'lastvart' in cpf.info:
             ps.params0['lastvart'] = float(cpf.info['lastvart'][()])
@@ -221,7 +221,10 @@ def resume_values(clargs, grid, ps):
             ps.params0['lastvart']=t
     else:
         t = ps.t0
-        ps.params0['lastvart'] = ps.t0
+        if lastvartparams:
+            ps.params0['lastvart'] = float(lastvartparams[0][9:])
+        else:
+            ps.params0['lastvart'] = ps.t0
     #
     # This may need to retrieve only a slice
     #
