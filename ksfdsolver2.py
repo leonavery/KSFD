@@ -212,7 +212,7 @@ def resume_values(clargs, grid, ps):
             p for p in clargs.params if p.startswith('lastvart=') 
         ]
         if (lastvartparams):          # there was an explicit lastvart param
-            ps.params0['lastvart'] = float(lastvartparams[0][3:])
+            ps.params0['lastvart'] = float(lastvartparams[0][9:])
         elif 'lastvart' in cpf.info:
             ps.params0['lastvart'] = float(cpf.info['lastvart'][()])
         elif len(cpf.sorted_times()) >= 2:
@@ -348,6 +348,8 @@ def main(*args):
                                                         protocol=0)
         tseries.info['sources'] = dill.dumps(sources, protocol=0)
         tseries.info['dt'] = ps.params0['dt']
+        if 'lastvart' in ps.params0:
+            tseries.info['lastvart'] = ps.params0['lastvart']
         tseries.flush()
     else:
         tseries = None
