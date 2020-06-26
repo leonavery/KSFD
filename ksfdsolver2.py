@@ -218,9 +218,10 @@ def resume_values(clargs, grid, ps):
         elif len(cpf.sorted_times()) >= 2:
             ps.params0['lastvart'] = tlast - cpf.sort_times()[-2]
         else:
-            pass                  # leave default lastvart unchanged.
+            ps.params0['lastvart']=t
     else:
         t = ps.t0
+        ps.params0['lastvart'] = ps.t0
     #
     # This may need to retrieve only a slice
     #
