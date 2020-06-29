@@ -361,17 +361,32 @@ class KSFDTS(petsc4py.PETSc.TS):
             retries=self.derivs.ps.clargs.series_retries,
             retry_interval=self.derivs.ps.clargs.series_retry_interval
         )
+        try:
+            del cpf.info['commandlineArguments']
+        except KeyError:
+            pass
         cpf.info['commandlineArguments'] = dill.dumps(
             self.derivs.ps.clargs,
             protocol=0
         )
+        try:
+            del cpf.info['SolutionParameters']
+        except KeyError:
+            pass
         cpf.info['SolutionParameters'] = dill.dumps(
             self.derivs.ps, recurse=True,
             protocol=0
         )
-        cpf.info['dt'] = h
-        cpf.info['lastvart'] = self.lastvart
+        dtd = cpf.info.require_dataset('dt', shape=(), dtype=float)
+        dtd[()] = h
+        lastvartd = cpf.info.require_dataset('lastvart', shape=(),
+                                             dtype=float)
+        lastvartd[()] = self.lastvart
         try:
+            try:
+                del cpf.info['sources']
+            except KeyError:
+                pass
             cpf.info['sources'] = dill.dumps(
                 self.derivs.sources,
                 protocol=0
