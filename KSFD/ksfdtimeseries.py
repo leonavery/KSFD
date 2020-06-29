@@ -39,7 +39,7 @@ Finally, I will write a simple script to merge all the files of
 MPi process group of any size will be able to retrieve data written by
 a process group of any size. 
 """
-import h5py, os, re, gc
+import h5py, os, re, gc, time
 import numpy as np
 import petsc4py
 from mpi4py import MPI
@@ -73,7 +73,9 @@ class KSFDTimeSeries:
             size=1,
             rank=0,
             mpiok=True,
-            mode='r+'
+            mode='r+',
+            retries=0,
+            retry_interval=60
     ):
         """
         Required parameter:
@@ -89,15 +91,20 @@ class KSFDTimeSeries:
             store all the data from all MPI processes in a single
             file.
         mode='r+': The file mode for opening the h5py.File.
-
+        retries=0. If nonzero, retry faile dopens this many times.
+        retry_interval=60: time (in secodns) between successive
+            retries. Note: the open will block while waiting for a
+            successful retry.
         size, rank, and mpiok are used mostly to figure out what
         filename to use. They need not correspond to the actual
         current MPU configuration. For instance, they may correspond
         to the config when the time series was created.
         """
         self.get_filename(basename, size, rank, mpiok, mode)
-        self._tsf = h5py.File(self.filename, mode=mode,
-                              driver=self.driver)
+        self.retries = retries
+        self.retry_interval = retry_interval
+        self._tsf = self.open_with_retry(self.filename, mode=mode,
+                                         driver=self.driver)
         self._size = size
         self._rank = rank
         self._mode = mode
@@ -372,13 +379,39 @@ class KSFDTimeSeries:
         self._sort()
         self.tsf.close()
 
+    def open_with_retry(fname, mode, driver):
+        try:
+            tsf = h5py.File(fname, mode=mode,
+                            driver=driver)
+        except OSError:
+            retries_left = self.retries
+            if retries_left <= 0:
+                logSeries('reopen failed: re-raising exception')
+                raise
+            while retries_left > 0:
+                logSERIES('reopen failed: {n} retries left'.format(
+                    n=retries_left
+                ))
+                time.sleep(self.retry_interval)
+                try: 
+                    tsf = h5py.File(self.filename, mode=mode,
+                                    driver=self.driver)
+                except OSError:
+                    failed = True
+                    if retries_left <= 1:
+                        raise
+                if not failed:
+                    break
+                retries_left -= 1
+            return tsf
+        
     def reopen(self):
         """
         Reopen a temp_closed TimeSeries
         """
         mode = self.mode if self.mode == 'r' else 'r+'
-        self._tsf = h5py.File(self.filename, mode=mode,
-                              driver=self.driver)
+        self._tsf = self.open_with_retry(self.filename, self.mode,
+                                         self.driver)
 
     def close(self):
         if not hasattr(self, '_tsf'):
