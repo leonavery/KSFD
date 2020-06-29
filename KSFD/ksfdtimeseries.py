@@ -411,6 +411,7 @@ class KSFDTimeSeries:
                 try: 
                     tsf = h5py.File(self.filename, mode=mode,
                                     driver=self.driver)
+                    failed = False
                 except OSError:
                     failed = True
                     if retries_left <= 1:
