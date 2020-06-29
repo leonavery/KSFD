@@ -684,6 +684,8 @@ class Gatherer(KSFDTimeSeries):
 
         Gatherer is read-only (mode 'r'). 
         """
+        self.retries = retries
+        self.retry_interval = retry_interval
         gatherre = '(.+)s(\d+)@.*'
         fname_match = re.fullmatch(gatherre, basename)
         if fname_match:
@@ -710,8 +712,6 @@ class Gatherer(KSFDTimeSeries):
             retries=retries,
             retry_interval=retry_interval
         )
-        self.retries = retries
-        self.retry_interval = retry_interval
         self.set_ranges()
         #
         # Since we have to open the rank 0 file before startig
