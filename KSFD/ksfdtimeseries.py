@@ -40,6 +40,7 @@ MPi process group of any size will be able to retrieve data written by
 a process group of any size. 
 """
 import h5py, os, re, gc, time
+import traceback as tb
 import numpy as np
 import petsc4py
 from mpi4py import MPI
@@ -403,6 +404,7 @@ class KSFDTimeSeries:
                 logSERIES('reopen failed with OSError: {n} retries left'.format(
                     n=retries_left
                 ))
+                logSERIES('tb.format_exc()', tb.format_exc())
                 time.sleep(self.retry_interval)
                 try: 
                     tsf = h5py.File(self.filename, mode=mode,
