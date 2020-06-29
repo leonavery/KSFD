@@ -95,6 +95,7 @@ class KSFDTimeSeries:
         retry_interval=60: time (in secodns) between successive
             retries. Note: the open will block while waiting for a
             successful retry.
+
         size, rank, and mpiok are used mostly to figure out what
         filename to use. They need not correspond to the actual
         current MPU configuration. For instance, they may correspond
@@ -103,11 +104,10 @@ class KSFDTimeSeries:
         self.get_filename(basename, size, rank, mpiok, mode)
         self.retries = retries
         self.retry_interval = retry_interval
-        self._tsf = self.open_with_retry(self.filename, mode=mode,
-                                         driver=self.driver)
         self._size = size
         self._rank = rank
         self._mode = mode
+        self._tsf = self.open_with_retry()
         _ = self.info           # make sure '/info' exists
         self.try_to_set('size', self.size)
         self.try_to_set('rank', self.rank)
@@ -379,7 +379,18 @@ class KSFDTimeSeries:
         self._sort()
         self.tsf.close()
 
-    def open_with_retry(fname, mode, driver):
+    def open_with_retry(
+            self,
+            fname=None,
+            mode=None,
+            driver=None
+    ):
+        if fname is None:
+            fname = self.filename
+        if mode is None:
+            mode = self.mode
+        if driver is None:
+            driver = self.driver
         try:
             tsf = h5py.File(fname, mode=mode,
                             driver=driver)
@@ -403,15 +414,14 @@ class KSFDTimeSeries:
                 if not failed:
                     break
                 retries_left -= 1
-            return tsf
+        return tsf
         
     def reopen(self):
         """
         Reopen a temp_closed TimeSeries
         """
         mode = self.mode if self.mode == 'r' else 'r+'
-        self._tsf = self.open_with_retry(self.filename, self.mode,
-                                         self.driver)
+        self._tsf = self.open_with_retry()
 
     def close(self):
         if not hasattr(self, '_tsf'):
@@ -563,7 +573,15 @@ class KSFDTimeSeries:
 
 class TimeSeries(KSFDTimeSeries):
 
-    def __init__(self, basename, grid=None, comm=None, mode='r+'):
+    def __init__(
+            self,
+            basename,
+            grid=None,
+            comm=None,
+            mode='r+',
+            retries=0,
+            retry_interval=60
+    ):
         """
         Open a KSFD.TimeSeries
 
@@ -579,6 +597,10 @@ class TimeSeries(KSFDTimeSeries):
         comm: the MPI communicator. (If not supplied, grid.comm is
             used.)
         mode: the file mode (See h5py.h5File.)
+        retries=0. If nonzero, retry faile dopens this many times.
+        retry_interval=60: time (in secodns) between successive
+            retries. Note: the open will block while waiting for a
+            successful retry.
         """
         if comm:
             self._comm = comm
@@ -590,7 +612,8 @@ class TimeSeries(KSFDTimeSeries):
         self._size = self.comm.size
         self._rank = self.comm.rank
         super().__init__(basename, size=self.size, rank=self.rank,
-                         mode=mode)
+                         mode=mode, retries=retries,
+                         retry_interval=retry_interval)
         if (grid):
             self.set_grid(grid)
             self.grid_save()

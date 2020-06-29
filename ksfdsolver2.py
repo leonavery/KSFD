@@ -63,6 +63,10 @@ def parse_commandline(args=None):
                         help='resume from last point of a TimeSeries')
     parser.add_argument('--restart',
                         help='restart (i.e., with t=t0) from last point of a TimeSeries')
+    parser.add_argument('--series_retries', type=int, default=0,
+                        help='# retries to open TimeSeries')
+    parser.add_argument('--series_retry_interval', type=int, default=60,
+                        help='time (s) between open retries')
     parser.add_argument('--showparams', action='store_true',
                         help='print all parameters')
     parser.add_argument('--noperiodic', action='store_true',
@@ -195,7 +199,13 @@ def resume_values(clargs, grid, ps):
     # This needs to open MPI, s1r0, or matching s<size>r<rank>
     #
     resuming = clargs.resume or clargs.restart
-    cpf = TimeSeries(resuming, grid=grid, mode='r')
+    cpf = TimeSeries(
+        resuming,
+        grid=grid,
+        mode='r',
+        retries=clargs.series_retries,
+        retry_interval=clargs.series_retry_interval
+    )
     tlast = cpf.sorted_times()[-1]
     dtparams = [ p for p in clargs.params if p.startswith('dt=') ]
     lastvartparams = [ 
@@ -328,7 +338,6 @@ def main(*args):
             )
         if not in_notebook():
             sys.exit()
-    logMAIN('ps.params0', ps.params0)
     grid = Grid(
         dim=ps.dim,
         dof=ps.nligands+1,      # rho, ligands
@@ -338,11 +347,14 @@ def main(*args):
     sources = decode_sources(commandlineArguments.source, ps, grid)
     logMAIN('sources', sources)
     vec0, t = initial_values(commandlineArguments, grid, ps)
+    logMAIN('ps.params0', ps.params0)
     if commandlineArguments.save:
         tseries = TimeSeries(
             basename=commandlineArguments.save,
             grid=grid,
-            mode='w'
+            mode='w',
+            retries=commandlineArguments.series_retries,
+            retry_interval=commandlineArguments.series_retry_interval,
         )
         tseries.info['commandlineArguments'] = dill.dumps(
             commandlineArguments,

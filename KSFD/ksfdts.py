@@ -354,7 +354,13 @@ class KSFDTS(petsc4py.PETSc.TS):
         # make a local copy of the dof vector
         #
         cpname = prefix + '_' + str(k) + '_'
-        cpf = TimeSeries(cpname, grid=self.derivs.grid, mode='w')
+        cpf = TimeSeries(
+            cpname,
+            grid=self.derivs.grid,
+            mode='w',
+            retries=self.derivs.ps.clargs.series_retries,
+            retry_interval=self.derivs.ps.clargs.series_retry_interval
+        )
         cpf.info['commandlineArguments'] = dill.dumps(
             self.derivs.ps.clargs,
             protocol=0
