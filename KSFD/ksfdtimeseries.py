@@ -392,15 +392,13 @@ class KSFDTimeSeries:
             mode = self.mode
         if driver is None:
             driver = self.driver
-        if mode != 'r':
-            mode = 'r+'
         try:
             tsf = h5py.File(fname, mode=mode,
                             driver=driver)
         except OSError:
             retries_left = self.retries
             if retries_left <= 0:
-                logSERIES('reopen failed: re-raising exception')
+                logSERIES('open failed: re-raising exception')
                 raise
             while retries_left > 0:
                 logSERIES('reopen failed with OSError: {n} retries left'.format(
@@ -426,7 +424,7 @@ class KSFDTimeSeries:
         Reopen a temp_closed TimeSeries
         """
         mode = self.mode if self.mode == 'r' else 'r+'
-        self._tsf = self.open_with_retry()
+        self._tsf = self.open_with_retry(mode=mode)
 
     def close(self):
         if not hasattr(self, '_tsf') or not self._tsf:
