@@ -400,7 +400,7 @@ class KSFDTimeSeries:
                 logSeries('reopen failed: re-raising exception')
                 raise
             while retries_left > 0:
-                logSERIES('reopen failed: {n} retries left'.format(
+                logSERIES('reopen failed with OSError: {n} retries left'.format(
                     n=retries_left
                 ))
                 time.sleep(self.retry_interval)
