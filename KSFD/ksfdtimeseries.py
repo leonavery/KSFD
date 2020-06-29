@@ -398,7 +398,7 @@ class KSFDTimeSeries:
         except OSError:
             retries_left = self.retries
             if retries_left <= 0:
-                logSeries('reopen failed: re-raising exception')
+                logSERIES('reopen failed: re-raising exception')
                 raise
             while retries_left > 0:
                 logSERIES('reopen failed with OSError: {n} retries left'.format(
@@ -662,7 +662,9 @@ class Gatherer(KSFDTimeSeries):
     def __init__(
             self,
             basename,
-            size=None
+            size=None,
+            retries=0,
+            retry_interval=60
     ):
         """
         Required positional parameter
@@ -704,8 +706,12 @@ class Gatherer(KSFDTimeSeries):
             size=size,
             rank=0,
             mpiok=False,
-            mode='r'
+            mode='r',
+            retries=retries,
+            retry_interval=retry_interval
         )
+        self.retries = retries
+        self.retry_interval = retry_interval
         self.set_ranges()
         #
         # Since we have to open the rank 0 file before startig
@@ -744,7 +750,11 @@ class Gatherer(KSFDTimeSeries):
             # We previously exhausted the iteration. Restart it
             #
             self.tsf.close()
-            self.__init__(self.basename, self.size)
+            self.__init__(self.basename,
+                          self.size,
+                          retries=self.retries,
+                          retry_interval=self.retry_interval
+            )
         elif self.iter_started:
             #
             # We're not just starting: move on to next file
@@ -759,7 +769,9 @@ class Gatherer(KSFDTimeSeries):
                 size=self.size,
                 rank=self.rank,
                 mpiok=False,
-                mode='r'
+                mode='r',
+                retries=self.retries,
+                retry_interval=self.retry_interval
             )
             self.set_ranges()
         self.iter_started = True
