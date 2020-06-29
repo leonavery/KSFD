@@ -392,6 +392,8 @@ class KSFDTimeSeries:
             mode = self.mode
         if driver is None:
             driver = self.driver
+        if mode != 'r':
+            mode = 'r+'
         try:
             tsf = h5py.File(fname, mode=mode,
                             driver=driver)
@@ -426,7 +428,7 @@ class KSFDTimeSeries:
         self._tsf = self.open_with_retry()
 
     def close(self):
-        if not hasattr(self, '_tsf'):
+        if not hasattr(self, '_tsf') or not self._tsf:
             self.reopen()
         self._sort()
         self.tsf.close()
