@@ -218,6 +218,8 @@ class KSFDTimeSeries:
             self.filename = name_mpi if self.usempi else name_nompi
         if self.creating and not self.rank_owns_file and usempi:
             self.driver = 'mpi'
+        if self.creating:
+            os.makedirs(os.path.dirname(self.filename), exist_ok=True)
         return self.filename
 
     def open(self, filename, usempi, mode):
