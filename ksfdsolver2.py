@@ -79,10 +79,6 @@ def parse_commandline(args=None):
                         help='random number generator seed')
     parser.add_argument('--source', type=str, action='append',
                         default=[], help='source function for rho, U_1_1, ...')
-    parser.add_argument('--decay', type=str, action='append',
-                        default=[], help='decay rate of parameter')
-    parser.add_argument('--slope', type=str, action='append',
-                        default=[], help='slope of parameter increase')
     parser.add_argument('params', type=str, nargs='*',
                         help='parameter values')
     commandlineArguments = parser.parse_args(

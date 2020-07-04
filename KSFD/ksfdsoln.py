@@ -272,38 +272,13 @@ class SolutionParameters:
         clargs = self.clargs
         t0 = self.t0
         params0 = self.params0
-        decays = ParameterList()
-        decays.decode(clargs.decay, allow_new=True)
-        slopes = ParameterList()
-        slopes.decode(clargs.slope, allow_new=True)
-        keys = set(decays.keys()) | set(slopes.keys())
-        extras = keys - set(params0.keys())
-        if extras:
-            raise KSFDException(
-                ', '.join([k for k in extras]) +
-                ': no such parameter'
-            )
         funcs = {}
         tdfuncs = {}
         for k in params0.keys():
-            d = decays[k] if k in decays else 0.0
-            s = slopes[k] if k in slopes else 0.0
             pt0 = params0[k] if k in params0 else 1.0
-            if d == 0 and s == 0:
-                def func(t, params={}, p0=pt0):
-                    return p0
-                td = False
-            elif d == 0:
-                p0 = pt0 - s*t0
-                def func(t, params={}, p0=pt0, s=s):
-                    return p0 + s*t
-                td = True
-            else:
-                a = (np.exp(d*t0)*(d*pt0 - s) - s)/d
-                pinf = s/d
-                def func(t, params={}, d=d, pinf=pinf, a=a):
-                    return pinf + a*np.exp(-d*t)
-                td = True
+            def func(t, params={}, p0=pt0):
+                return p0
+            td = False
             
             funcs[k] = func
             if td:
