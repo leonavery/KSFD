@@ -60,7 +60,13 @@ def safe_sympify(exp):
     sympify itself raises an exception in this case, but the message
     is not informative -- it merely reports a syntax error.
     """
-    if isinstance(exp, str):
+    if isinstance(exp, str) and exp == '':
+        exp = None
+    elif isinstance(exp, str) and exp == 'False':
+        exp = False
+    elif isinstance(exp, str) and exp == 'True':
+        exp = True
+    elif isinstance(exp, str):
         wordre = r'\b\w+\b'
         words = re.finditer(wordre, exp)
         for word in words:
@@ -865,12 +871,12 @@ class Derivatives:
 
     def groom(self, farr):
         """Get rid of negatives and nans"""
-        rhomin = self.ps.params0['rhomin']
+        rhomin = self.ps.values()['rhomin']
         logSYM('np.min(farr[0]), np.sum(farr[0] < 0.0)',
                np.min(farr[0]), np.sum(farr[0] < 0.0))
         farr[0] = np.maximum(farr[0], rhomin) # don't take logs of <=0
         farr[0][np.isnan(farr[0])] = rhomin
-        Umin = self.ps.params0['Umin']
+        Umin = self.ps.values()['Umin']
         logSYM('np.min(farr[1:]), np.sum(farr[1:] < 0.0)',
                np.min(farr[1:]), np.sum(farr[1:] < 0.0))
         farr[1:] = np.maximum(farr[1:], Umin)
@@ -1485,15 +1491,15 @@ class StencilUfunc:
 
 class SpatialExpression:
     """
-    SptailExpression -- evaluate a function of space
+    SptailExpression -- evaluate a function of space and time
 
     This class encapsulates a numpy ufunc with the information
     necessary to build and call it. The function is defined by a sympy
     expression (or str that is sympified) of x, y, and z (or the
     subset appropriate to the dimension). It may also depend on t, or
-    any command line parameters (which may themselves depnd on t). 
+    any command line parameters (which may themselves depend on t). 
 
-    The SpatialExpression object is suppleid a KSFD.Grid when created,
+    The SpatialExpression object is supplied a KSFD.Grid when created,
     and this defines x, y, and z at the time of evaluation. A func is
     created by the build() method, and called by the call() method
     with appropriate arguments. call() will call build() to build the
@@ -1530,7 +1536,7 @@ class SpatialExpression:
         grid: The KSFD.Grid object.
 
         Optional keyword argument:
-        expressions='0.0': The symp-y expression to be evaluated.
+        expressions='0.0': The sympy expression to be evaluated.
 
         The values of ps, grid, and expression are avilable as
         properties ps, grid, expression, and parameters. ps and grid

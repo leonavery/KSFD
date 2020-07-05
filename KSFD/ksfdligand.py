@@ -6,8 +6,10 @@ import collections
 import itertools
 try:
     from .ksfdexception import KSFDException
+    from .ksfdsym import safe_sympify
 except ImportError:
     from ksfdexception import KSFDException
+    from ksfdsym import safe_sympify
 
 class Parameter:
     """Syntactic sugar for getter/setter pair
@@ -61,30 +63,30 @@ def find_duplicates(list):
     return dups
 
 class ParameterList:
-    """Wrapper around OrderDict
-
-    Required positional parameter
-    parameters
-
-    This must be a list of the form
-    [(key, default, help),
-     (key, default, help),
-     (key, p, default, help),
-     ...
-    ]
-
-    Each tuple in the list must be of length 3 or length 4. In a
-    length 3 tuple each help is a string and default is a value of any
-    type. The parameter will be stored in an OrderedDict within the
-    ParameterList object and its value initialized to the default.
-
-    The length 4 form is used for a parameter that is stored somewhere
-    outside the ParameterList. p is a Parameter object that can be
-    used to access it. Its value is left unchanged.
-
-    default and help are stored for later use.
-    """
     def __init__(self, parameters=()):
+        """Wrapper around OrderDict
+
+        Required positional parameter
+        parameters
+
+        This must be a list of the form
+        [(key, default, help),
+         (key, default, help),
+         (key, p, default, help),
+         ...
+        ]
+
+        Each tuple in the list must be of length 3 or length 4. In a
+        length 3 tuple each help is a string and default is a value of any
+        type. The parameter will be stored in an OrderedDict within the
+        ParameterList object and its value initialized to the default.
+
+        The length 4 form is used for a parameter that is stored somewhere
+        outside the ParameterList. p is a Parameter object that can be
+        used to access it. Its value is left unchanged.
+
+        default and help are stored for later use.
+        """
         self.values = collections.OrderedDict()
         self.ps = collections.OrderedDict()
         self.keys = self.ps.keys
@@ -185,6 +187,10 @@ class ParameterList:
 
         Required argument:
         params: a list of strs of the form 'key=value'
+
+        values are sympified. Booleans and numbers are converted to
+        bools, floats, and ints, but other expressions are left in the
+        form of sympy objects. 
         """
         keys = [ arg.split('=', maxsplit=1)[0] for arg in params ]
         dups = find_duplicates(keys)
@@ -194,10 +200,13 @@ class ParameterList:
             )
         for arg in params:
             k,val = arg.split('=', maxsplit=1)
-            try:
-                v = ast.literal_eval(val)
-            except ValueError:            # if eval fails,
-                v = val                   # ...just use str
+            v = safe_sympify(val)
+            if v is None or v.is_Boolean or isinstance(v, bool):
+                v = bool(v)
+            elif v.is_Integer:
+                v = int(v)
+            elif v.is_Float:
+                v = float(v)
             try:
                 p = self.ps[k]
             except KeyError as e:         # k not in list
@@ -206,8 +215,8 @@ class ParameterList:
                 else:
                     raise                 # otherwise rethrow KeyError
             else:                         # k is in the list: 
-                t = type(p())             # just set value
-                v = t(v)
+                # t = type(p())             # just set value
+                # v = t(v)
                 p(v)
 
     def params(self):

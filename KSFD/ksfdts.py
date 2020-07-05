@@ -236,30 +236,22 @@ class KSFDTS(petsc4py.PETSc.TS):
         u.assemble()
         return u
 
-    @property
-    def variance_timing_function(self):
-        if not getattr(self, '_variance_timing_function', None):
-            self._variance_timing_function = safe_sympify(
-                self.derivs.ps.params0['variance_timing_function']
-            )
-        return self._variance_timing_function
-
     def is_noise_time(self, t, lastvart):
-        vrate = self.derivs.ps.params0['variance_rate']
+        vrate = self.derivs.ps.values(t)['variance_rate']
         if not vrate or vrate <= 0.0:
             return False
         vlast = self.derivs.ps.values(lastvart)
-        flast = float(self.variance_timing_function.subs(vlast))
+        flast = vlast['variance_timing_function']
         vnow = self.derivs.ps.values(t)
-        fnow = float(self.variance_timing_function.subs(vnow))
+        fnow = vnow['variance_timing_function']
         return fnow - flast >= 1.0
 
     def add_variance(self, u, dt):
         """Add variance if variance_rate set"""
-        vrate = self.derivs.ps.params0['variance_rate']
+        t = self.getTime()
+        vrate = self.derivs.ps.values(t)['variance_rate']
         if not vrate or vrate <= 0.0:
             return u
-        t = self.getTime()
         logTS('injecting variance, t, dt', t, dt)
         u.assemble()         # just to be safe
         fva = u.array.reshape(self.derivs.grid.Vlshape, order='F')
@@ -279,7 +271,7 @@ class KSFDTS(petsc4py.PETSc.TS):
         u = self.getSolution()
         self.CFL_maxh = self.CFL_step(u, t)
         logTS('h, self.CFL_maxh', h, self.CFL_maxh)
-        safety = self.derivs.ps.params0['CFL_safety_factor']
+        safety = self.derivs.ps.values(t)['CFL_safety_factor']
         if (safety > 0.0):
             maxh = safety * self.CFL_maxh
             if h > maxh:

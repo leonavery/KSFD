@@ -140,7 +140,7 @@ def decode_sources(sargs, ps, grid):
     ligands = ps.groups.ligands()
     from KSFD import find_duplicates, KSFDException
     nligands = ps.nligands
-    sources = ['0.0'] * (nligands + 1)
+    sources = [0.0] * (nligands + 1)
     keys = [ arg.split('=', maxsplit=1)[0] for arg in sargs ]
     dups = find_duplicates(keys)
     if dups:
@@ -160,8 +160,7 @@ def decode_sources(sargs, ps, grid):
         k,val = sarg.split('=', maxsplit=1)
         sources[fnum] = SpatialExpression(ps, grid, val)
     for i,src in enumerate(sources):
-        if isinstance(src, str):
-            sources[i] = SpatialExpression(ps, grid, src)
+        sources[i] = SpatialExpression(ps, grid, src)
     return sources
         
 def initial_values(
@@ -258,8 +257,9 @@ def start_values(clargs, grid, ps):
                  nz=rnz,
                  dof=1
         )
-    murho0 = ps.params0['Nworms']/(ps.width**ps.dim)
-    sigma = ps.params0['srho0']
+    values0 = ps.values()
+    murho0 = values0['Nworms']/(ps.width**ps.dim)
+    sigma = values0['srho0']
     rvals = rgrid.Sdmda.createGlobalVec()
     rva = rvals.array.reshape(rgrid.Slshape, order='F')
     if sigma == 0.0:
@@ -279,8 +279,8 @@ def start_values(clargs, grid, ps):
     vec = grid.Vdmda.createGlobalVec()
     va = vec.array.reshape(grid.Vlshape, order='F')
     svec = grid.Sdmda.createGlobalVec()
-    if ps.params0['rho0']:
-        vrho0 = SpatialExpression(ps, grid, ps.params0['rho0'])(
+    if values0['rho0']:
+        vrho0 = SpatialExpression(ps, grid, values0['rho0'])(
             out=(va[0],)
         )
     else:
@@ -290,19 +290,19 @@ def start_values(clargs, grid, ps):
     for dof, lig in enumerate(ps.groups.ligands()):
         name = 'U0' + lig.name()[1:]
         if (
-            name in ps.params0 and
-            ps.params0[name] is not None and
-            ps.params0[name] != ''
+            name in values0 and
+            values0[name] is not None and
+            values0[name] != ''
         ):
-            U0 = SpatialExpression(ps, grid, ps.params0[name])(
+            U0 = SpatialExpression(ps, grid, values0[name])(
                 out=(va[dof+1],)
             )
         else:
             va[dof+1] = va[0]*float(lig.s/lig.gamma)
     vec.assemble()
     return vec,ps.t0
-               
-               
+
+
 def main(*args):
     if args:
         args = list(args)

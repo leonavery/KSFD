@@ -4,6 +4,7 @@
 # arguments.
 #
 import sys
+import sympy as sy
 import shlex
 from argparse import ArgumentParser, SUPPRESS
 
@@ -21,10 +22,12 @@ default_parameters = [
     ('height', 1.0, 'height of spatial domain'),
     ('depth', 1.0, 'depth of spatial domain'),
     ('CFL_safety_factor', 0.0, 'CFL upper bound on timestep'),
-    ('conserve_worms', '', 'enforce conservation of worms'),
+    ('conserve_worms', False, 'enforce conservation of worms'),
     ('variance_rate', 0.0, 'rate of increase in random rho variance'),
-    ('variance_interval', 100.0, 'frequency of increase in random rho variance'),
-    ('variance_timing_function', 't/variance_interval', 'when to inject noise'),
+    ('variance_interval', 100.0,
+     'frequency of increase in random rho variance'),
+    ('variance_timing_function', sy.sympify('t/variance_interval'),
+     'when to inject noise'),
     ('Umin', 1e-7, 'minimum allowed value of U'),
     ('rhomin', 1e-7, 'minimum allowed value of rho'),
     ('rhomax', 28000, 'approximate max value of rho'),
@@ -32,9 +35,9 @@ default_parameters = [
     ('maxscale', 2.0, 'scale of cap potential'),
     ('s2', 5.56e-4, 'random worm movement (sigma^2/2)'),
     ('Nworms', 0.0, 'total number of worms'),
-    ('srho0', '90.0', 'standard deviation of rho(0)'),
-    ('rho0', '9000.0', 'C++ string function for rho0, added to random rho0'),
-    ('U0_1_1', '', 'C++ string function for U0_1_1'),
+    ('srho0', 90.0, 'standard deviation of rho(0)'),
+    ('rho0', 9000.0, 'function for rho0, added to random rho0'),
+    ('U0_1_1', '', 'function for U0_1_1'),
     ('ngroups', 1, 'number of ligand groups'),
     ('nligands_1', 1, 'number of ligands in group 1'),
     ('alpha_1', 1500.0, 'alpha for ligand group 1'),
@@ -62,7 +65,7 @@ class Parser(ArgumentParser):
     program --petsc petscarg1 petscarg2 ...
     program myarg1 ... --petsc petscarg1 petscarg2 ... -- myarg2 myarg3
 
-    The list of PETSc arguments is terminated by a '--' ot its end
+    The list of PETSc arguments is terminated by a '--' at its end
 
     parse_args returns a Namespace object that contains the results of
     parsing your object in the usual way. In addition, it will contain
@@ -89,6 +92,7 @@ class Parser(ArgumentParser):
     def convert_arg_line_to_args(self, arg_line, comment_char='#'):
         """Override the function in argparse to handle comments"""
         return shlex.split(arg_line, comments=True)
+        # Unreachable:
         cpos = arg_line.find(comment_char)
         if cpos >= 0:
             arg = arg_line[:cpos].strip()

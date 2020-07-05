@@ -36,6 +36,7 @@ import copy
 import dill, pickle
 import numpy as np
 import sympy as sy
+import networkx as nx
 import h5py
 import collections
 try:
@@ -61,7 +62,7 @@ class SolutionParameters:
 
     params0: a mappable giving the initial (time t0) values of
         parameters.
-    groups: a LigandGroups object detailig the ligands.
+    groups: a LigandGroups object detailing the ligands.
     Vparams: LigandGroups object containing parameters for use in
         computing V.
     V: a function to compute potential
@@ -261,28 +262,79 @@ class SolutionParameters:
         params -- it is there only so that the function can be called
         with a params argument without an exception being thrown.
 
-        pfucns creates a mapping from parameter 't' to the identity
+        pfuncs creates a mapping from parameter 't' to the identity
         function, which returns t.
 
         The return tuple is (funcs, tdfuncs). The dict funcs contains
         a function for every parameter in params0. tdfuncs contains
         function only for time-dependent parameters. There will always
         be at least one of these: 't'. 
+
+        pfuncs begins with a topological sort of the paramters,
+        producing an ordred list in which a parameter depends only on
+        parameters that occur earlier in the list. This will fail
+        with a NetworkX exception if there are cyclic dependencies
+        (e.g. p1=2*p2, p2=2*p1).
+
+        pfuncs then proceeds to substitute the expressions for earlier
+        expression into later expressions. The result will be a
+        numerical value for each parameter, a vlue as a function of
+        time, or a value that is a function of time and space. The
+        latter two classes are used to make tdfuncs.
+
+        Eventually I plan to extend this to allow expressions (potentials)
+        that depend on rho and ligand fields. The required ligand
+        parameter is included for this purpose, but is not currently
+        used.
         """
         clargs = self.clargs
         t0 = self.t0
         params0 = self.params0
+        pgraph = nx.DiGraph()
+        leaves = set(sy.symbols('t x y z')[:self.dim+1])
+        keys = set(params0.keys()).difference(map(str, leaves))
+        pgraph.add_nodes_from(keys)
+        for p1,v1 in params0.items():
+            if (
+                isinstance(v1, bool) or
+                isinstance(v1, int) or
+                isinstance(v1, float)
+            ):
+                continue
+            for p2 in v1.free_symbols.difference(leaves):
+                pgraph.add_edge(str(p2), p1)
+        order = nx.topological_sort(pgraph)
+        done = collections.OrderedDict()
         funcs = {}
         tdfuncs = {}
-        for k in params0.keys():
-            pt0 = params0[k] if k in params0 else 1.0
-            def func(t, params={}, p0=pt0):
-                return p0
-            td = False
-            
-            funcs[k] = func
-            if td:
-                tdfuncs[k] = func
+        for k in order:
+            pt = params0[k]
+            isnum = (
+                isinstance(pt, bool) or
+                isinstance(pt, int) or
+                isinstance(pt, float)
+            )
+            if not isnum:
+                pt = pt.subs(done)
+            done[k] = pt
+            pta = pt.free_symbols if not isnum else set()
+            if not pta:
+                pt0 = pt.evalf() if not isnum else pt
+                def func(t, params={}, p0=pt0):
+                    return p0
+                funcs[str(k)] = func
+            elif pta == set([sy.Symbol('t')]):
+                lpt = sy.lambdify(sy.Symbol('t'), pt, 'numpy')
+                def func(t, params={}, l0=lpt):
+                    return l0(t)
+                funcs[str(k)] = func
+                tdfuncs[str(k)] = func
+            else:
+                def func(t, params={}, s0=pt):
+                    return s0.subs({'t': t})
+                funcs[str(k)] = func
+                if sy.Symbol('t') in pt.free_symbols:
+                    tdfuncs[str(k)] = func
         def identity(t, params={}):
             return(t)
         funcs['t'] = identity
