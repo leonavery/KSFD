@@ -15,7 +15,7 @@ default_parameters = [
     ('nwidth', 8, 'number grid points in width'),
     ('nheight', 8, 'number grid points in height'),
     ('ndepth', 8, 'number grid points in depth'),
-    ('randgridnw', 0, 'random grid with'),
+    ('randgridnw', 0, 'random grid width'),
     ('randgridnh', 0, 'random grid height'),
     ('randgridnd', 0, 'random grid depth'),
     ('width', 1.0, 'width of spatial domain'),
