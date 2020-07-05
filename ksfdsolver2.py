@@ -257,7 +257,7 @@ def start_values(clargs, grid, ps):
                  nz=rnz,
                  dof=1
         )
-    values0 = ps.values()
+    values0 = ps.values0
     murho0 = values0['Nworms']/(ps.width**ps.dim)
     sigma = values0['srho0']
     rvals = rgrid.Sdmda.createGlobalVec()
@@ -344,6 +344,7 @@ def main(*args):
     logMAIN('sources', sources)
     vec0, t = initial_values(commandlineArguments, grid, ps)
     logMAIN('ps.params0', ps.params0)
+    logMAIN('ps.values0', ps.values0)
     if commandlineArguments.save:
         tseries = TimeSeries(
             basename=commandlineArguments.save,

@@ -62,6 +62,14 @@ class SolutionParameters:
 
     params0: a mappable giving the initial (time t0) values of
         parameters.
+    values0: a mappable giving the initial (time t0) values of
+        parameters. This differs from params0 in that all symbols that
+        are resolvable at time t0 have been substituted with their
+        numeric values, whereas the values in params0 may still be
+        sympy expressions with parameters represented by free
+        symbols. Thus, if you want a number, values0 is the member to
+        use. (It is actually just ps.values() stored away for
+        convenisnce.)
     groups: a LigandGroups object detailing the ligands.
     Vparams: LigandGroups object containing parameters for use in
         computing V.
@@ -114,7 +122,7 @@ class SolutionParameters:
             self.params0['sigma'] = self.cparams['sigma']
             self.params0['s2'] = self.params0['sigma']**2/2
         if 's2' in self.cparams:
-            self.params0['sigma'] = np.sqrt(2.0 * self.cparams['s2'])
+            self.params0['sigma'] = sy.sqrt(2.0 * self.cparams['s2'])
             self.params0['s2'] = self.params0['sigma']**2/2
         if not 'nwidth' in self.cparams:
             self.params0['nwidth'] = self.params0['nelements']
@@ -141,8 +149,9 @@ class SolutionParameters:
         self.t0 = self.params0['t0']
         self.maxscale = self.params0['maxscale']
         self.pfuncs()
+        self.values0 = self.values()
         self.constants = collections.OrderedDict()
-        for k,v in self.params0:
+        for k,v in self.values0.items():
             if k not in self.tdfuncs:
                 self.constants[k] = v
         def Vfunc(Us, params={}):
@@ -247,7 +256,7 @@ class SolutionParameters:
         Returns a dict that maps constants to number, but
         time-dependent parameters to symbols.
         """
-        tds = collections.OrderedDict(self.params0)
+        tds = collections.OrderedDict(self.values0)
         for name in self.tdfuncs:
             tds[name] = sy.Symbol(name)
         return tds
