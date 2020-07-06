@@ -1,4 +1,4 @@
-KSFD is a package for fintie difference solutions of a version of the
+KSFD is a package for finite difference solutions of a version of the
 Keller-Segel PDEs. The guts of the code are in the package KSFD, which
 lives in the subdirectory KSFD. In addition, this root directory
 contains some script meant ot be used by the user. The principle one

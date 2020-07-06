@@ -599,6 +599,7 @@ def start_values(clargs, grid, ps):
         if (
             name in values0 and
             values0[name] is not None and
+            values0[name] is not False and
             values0[name] != ''
         ):
             U0 = SpatialExpression(ps, grid, values0[name])(

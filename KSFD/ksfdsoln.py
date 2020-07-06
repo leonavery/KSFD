@@ -45,14 +45,14 @@ try:
     from .ksfdexception import KSFDException
     from .ksfdmakesolver import makeKSFDSolver
     from .ksfdligand import ParameterList, LigandGroups
-    from .ksfdsym import Derivatives
+    from .ksfdsym import Derivatives, safe_sympify
 except ImportError:
     from ksfdargparse import default_parameters
     from ksfdtimeseries import TimeSeries
     from ksfdexception import KSFDException
     from ksfdmakesolver import makeKSFDSolver
     from ksfdligand import ParameterList, LigandGroups
-    from ksfdsym import Derivatives
+    from ksfdsym import Derivatives, safe_sympify
 
 
 class SolutionParameters:
@@ -304,7 +304,10 @@ class SolutionParameters:
         keys = set(params0.keys()).difference(map(str, leaves))
         pgraph.add_nodes_from(keys)
         for p1,v1 in params0.items():
+            if isinstance(v1, str):
+                v1 = safe_sympify(v1)
             if (
+                v1 is None or
                 isinstance(v1, bool) or
                 isinstance(v1, int) or
                 isinstance(v1, float)
@@ -319,6 +322,7 @@ class SolutionParameters:
         for k in order:
             pt = params0[k]
             isnum = (
+                pt is None or pt == '' or
                 isinstance(pt, bool) or
                 isinstance(pt, int) or
                 isinstance(pt, float)

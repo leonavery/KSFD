@@ -1,0 +1,65 @@
+--save=solutions/options81
+--check=checks/options81
+dt=1e-8
+tmax=2e5
+maxsteps=10000
+width=1
+nelements=384
+dim=2
+degree=3
+atol=0.01
+rtol=1e-6
+rhomin=1e-7
+rhomax=28000
+cushion=2000
+sigma=0.02357
+# Nworms=9000
+Nworms=0
+murho=9000.0
+rho0=murho
+# U0_1_1=murho
+# U0_2_1=murho
+srho0=90
+arho=1.0
+aUa=0.6846227279629311
+aUr=0.088562372925828
+lambda=0.003974930217658144
+k0=4.0
+ngroups=2
+# attractant
+nligands_1=1
+alpha_1=1500
+beta_1=5.56e-4
+s_1_1=0.01
+gamma_1_1=0.01
+D_1_1=1e-6
+# repellent
+nligands_2=1
+alpha_2=1500
+beta_2=-5.56e-4
+s_2_1=0.001
+gamma_2_1=0.001
+D_2_1=1e-5
+--petsc
+-ts_type rosw
+#-ts_type arkimex
+#-ts_type beuler
+-ts_arkimex_type 4
+-ts_adapt_type basic
+-ts_adapt_dt_max 10000
+-ts_adapt_dt_min 1e-20
+-ts_adapt_monitor 1
+-ts_adapt_clip 0.1,5
+-info
+-ksp_type preonly
+-pc_type lu
+-pc_factor_mat_solver_type mumps
+-snes_type ksponly
+-snes_max_funcs 2000
+-ksp_initial_guess_nonzero 0
+-ksp_max_it 2000
+-snes_converged_reason ascii
+-snes_view ascii
+-ksp_converged_reason ascii
+-options_left 1
+--
