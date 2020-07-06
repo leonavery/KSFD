@@ -146,14 +146,16 @@ parameter value must resolve to a number. ksfdsolver2 figures out
 which order to evaluate your parameters in to get a number. For
 instance, if you say:
 
-    'variance_timing_function=floor(vtfreq*log(Max(t, start), base))
+    'variance_timing_function=ceiling(vtfreq*log(Max(t, start), base))
     vtfreq=2
     start=1
     base=10
 
 then variance_timing_function will become the expression
-floor(2*log(Max(t, 1), 10), a function of t that can be evaluated to
-a number at any time.
+ceiling(2*log(Max(t, 1), 10), a function of t that can be evaluated to
+a number at any time. This particular VTF will inject variance at t=1,
+t=sqrt(10), t=10, and twice every decade thereafter, and can be
+adjusted with the paramters vtfreq, start, base.
 
 If there are syntax errors or cyclic dependencies (e.g. p1=2*p2,
 p2=2*p1) then ksfdsolver2 will throw an extremely uninformative
@@ -665,9 +667,9 @@ def main(*args):
         tseries.info['SolutionParameters'] = dill.dumps(ps, recurse=True,
                                                         protocol=0)
         tseries.info['sources'] = dill.dumps(sources, protocol=0)
-        tseries.info['dt'] = ps.params0['dt']
+        tseries.info['dt'] = float(ps.params0['dt'])
         if 'lastvart' in ps.params0:
-            tseries.info['lastvart'] = ps.params0['lastvart']
+            tseries.info['lastvart'] = float(ps.params0['lastvart'])
         tseries.flush()
     else:
         tseries = None

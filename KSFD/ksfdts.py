@@ -108,11 +108,11 @@ class KSFDTS(petsc4py.PETSc.TS):
         if (not isinstance(self.comm, type(MPI.COMM_SELF))):
             self.mpi_comm = self.comm.tompi4py()
         self.derivs = derivs
-        self.t0 = t0
-        self.tmax = tmax
+        self.t0 = float(t0)
+        self.tmax = float(tmax)
         self.maxsteps = maxsteps
-        self.rtol = rtol
-        self.atol = atol
+        self.rtol = float(rtol)
+        self.atol = float(atol)
         self.restart = restart
         self.tstype = tstype
         self.finaltime = finaltime
@@ -129,6 +129,7 @@ class KSFDTS(petsc4py.PETSc.TS):
             self.hmin = hmin
         else:
             self.hmin = self.default_hmin
+        self.hmin = float(self.hmin)
         self.setProblemType(self.ProblemType.NONLINEAR)
         self.setMaxSNESFailures(1)
         self.setTolerances(atol=atol, rtol=rtol)
@@ -141,7 +142,7 @@ class KSFDTS(petsc4py.PETSc.TS):
         self.f = self.u.duplicate()
         self.f.setUp()
         self.setSolution(self.u)
-        self.setTimeStep(dt)
+        self.setTimeStep(float(dt))
         self.setMaxSteps(max_steps=maxsteps)
         self.setMaxTime(max_time=tmax)
         self.setExactFinalTime(finaltime)
@@ -370,7 +371,7 @@ class KSFDTS(petsc4py.PETSc.TS):
             protocol=0
         )
         dtd = cpf.info.require_dataset('dt', shape=(), dtype=float)
-        dtd[()] = h
+        dtd[()] = float(h)
         lastvartd = cpf.info.require_dataset('lastvart', shape=(),
                                              dtype=float)
         lastvartd[()] = self.lastvart
@@ -428,7 +429,7 @@ class KSFDTS(petsc4py.PETSc.TS):
             h = ts.getTimeStep()
             dt = self.timeseries.info.require_dataset('dt', shape=(),
                                                       dtype=float)
-            dt[()] = h
+            dt[()] = float(h)
             self.timeseries.temp_close()
 
         return (saveMonitor, closeSaveMonitor)
