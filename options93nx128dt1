@@ -1,0 +1,85 @@
+# This is a convergence test of the type described in thesis section
+# 3.8. The initial condition (set with rho0, U0_1_1, and U0_2_1
+# parameters) is a small sinusoidal perturbation of the unstable
+# equilibrium at rho = U_1_1 = U_2_1 = 9000. The amplitudes are chosen
+# to make this an eugenvector of the linearized PDEs. At early times
+# the deviation from 9000 grows exponentially with growth rate
+# lamda. (The unusual spelling is to avoid conflict with the python
+# reserved word lambda.) The exponential would only be an
+# approximation, but the source expression makes the exponential
+# solution exact. (For a limited time -- the exponential growth would
+# eeventaully lead to negative densities at the troughs of the
+# sinusoid, adn then of course everything would break down.) 
+#
+# For the convergence test the adaptive timstepper is turned off
+# (PETSc option '-ts_adapt_type none'). Consequently the initial time
+# step (dt=1) never changes, and 2080 steps are necessary to get to
+# the final time tmax=2080. This takes 14 min on my PC (compared to
+# just 2 min for options92, which uses the adaptive stepper). 
+#
+--save=solutions/options93nx128dt1
+--check=checks/checks93/options93nx128dt1
+--source=rho="arho*exp(t*lamda)*((-315.82734083485946*arho*maxscale*s2*cos(1.5707963267948966 + 25.132741228718345*x)**2*exp(t*lamda))/(cushion*cosh((murho - rhomax + arho*exp(t*lamda)*sin(1.5707963267948966 + 25.132741228718345*x))/cushion)**2) + lamda*sin(1.5707963267948966 + 25.132741228718345*x) + 631.6546816697189*s2*sin(1.5707963267948966 + 25.132741228718345*x) + (631.6546816697189*arho*aUa*beta_1*cos(1.5707963267948966 + 25.132741228718345*x)**2*exp(t*lamda))/(murho + alpha_1 + arho*aUa*exp(t*lamda)*sin(1.5707963267948966 + 25.132741228718345*x)) + (631.6546816697189*arho*aUr*beta_2*cos(1.5707963267948966 + 25.132741228718345*x)**2*exp(t*lamda))/(murho + alpha_2 + arho*aUr*exp(t*lamda)*sin(1.5707963267948966 + 25.132741228718345*x)) - (murho + arho*exp(t*lamda)*sin(1.5707963267948966 + 25.132741228718345*x))*((aUa*beta_1*(631.6546816697189*arho*aUa*exp(t*lamda) + (631.6546816697189*murho + 631.6546816697189*alpha_1)*sin(1.5707963267948966 + 25.132741228718345*x)))/(murho + alpha_1 + arho*aUa*exp(t*lamda)*sin(1.5707963267948966 + 25.132741228718345*x))**2 + (aUr*beta_2*(631.6546816697189*arho*aUr*exp(t*lamda) + (631.6546816697189*murho + 631.6546816697189*alpha_2)*sin(1.5707963267948966 + 25.132741228718345*x)))/(murho + alpha_2 + arho*aUr*exp(t*lamda)*sin(1.5707963267948966 + 25.132741228718345*x))**2 - (315.82734083485946*maxscale*s2*(1.*cushion*sin(1.5707963267948966 + 25.132741228718345*x) + 2.*arho*cos(1.5707963267948966 + 25.132741228718345*x)**2*exp(t*lamda)*tanh((murho - rhomax + arho*exp(t*lamda)*sin(1.5707963267948966 + 25.132741228718345*x))/cushion)))/(cushion**2*cosh((murho - rhomax + arho*exp(t*lamda)*sin(1.5707963267948966 + 25.132741228718345*x))/cushion)**2)))"
+dt=1
+tmax=2080
+maxsteps=10000
+width=1
+nelements=128
+dim=1
+degree=3
+atol=0.01
+rtol=1e-6
+rhomin=1e-7
+rhomax=28000
+cushion=2000
+sigma=0.02357
+# Nworms=9000
+Nworms=0
+'rho0=murho + arho*sin(2*pi*(0.25+k0*x))'
+'U0_1_1=murho + arho*aUa*sin(2*pi*(0.25+k0*x))'
+'U0_2_1=murho + arho*aUr*sin(2*pi*(0.25+k0*x))'
+murho=9000.0
+arho=1.0
+aUa=0.6846227279629311
+aUr=0.088562372925828
+lamda=0.003974930217658144
+k0=4.0
+# srho0=90
+srho0=0
+ngroups=2
+# attractant
+nligands_1=1
+alpha_1=1500
+beta_1=5.56e-4
+s_1_1=0.01
+gamma_1_1=0.01
+D_1_1=1e-6
+# repellent
+nligands_2=1
+alpha_2=1500
+beta_2=-5.56e-4
+s_2_1=0.001
+gamma_2_1=0.001
+D_2_1=1e-5
+--petsc
+-ts_type rosw
+#-ts_type arkimex
+#-ts_type beuler
+-ts_arkimex_type 4
+-ts_adapt_type none
+-ts_adapt_dt_max 10000
+-ts_adapt_dt_min 1e-20
+-ts_adapt_monitor 1
+-ts_adapt_clip 0.1,5
+-ksp_type preonly
+-pc_type lu
+-pc_factor_mat_solver_type mumps
+-snes_type ksponly
+-snes_max_funcs 2000
+-ksp_initial_guess_nonzero 0
+-ksp_max_it 2000
+-snes_converged_reason ascii
+-snes_view ascii
+-ksp_converged_reason ascii
+-options_left 1
+--

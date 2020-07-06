@@ -1,0 +1,83 @@
+# This is the prototype for the problem that was used for the
+# convergence tests described in thesis section 3.8. The initial
+# condition (set with rho0, U0_1_1, and U0_2_1 parameters) is a small
+# sinusoidal perturbation of the unstable equilibrium at rho = U_1_1 =
+# U_2_1 = 9000. The amplitudes are chosen to make this an eugenvector
+# of the linearized PDEs. At early times the deviation from 9000 grows
+# approximately exponentially with growth rate lamda. (The unusual
+# spelling is to avoid conflict with the python reserved word
+# lambda.) The exponential is onyl an approximation, so this file
+# itself is not directly useful for convergence tests. See
+# options93nx128dt1 for a version that is.
+#
+# This problem runs to completion is about 2 min on my personal
+# computer. It is quick because it reaches a stable equilibirum after
+# a few thousand seconds, and thereafter the adaptive stepper (PETSc
+# option '-ts_adapt_type basic') rapidly increases the step size, so
+# that it takes few steps to get to t=200,000. 
+#
+--save=solutions/options92
+--check=checks/checks92/options92
+dt=1
+tmax=200000
+maxsteps=10000
+width=1
+nelements=128
+dim=1
+degree=3
+atol=0.01
+rtol=1e-6
+rhomin=1e-7
+rhomax=28000
+cushion=2000
+sigma=0.02357
+# Nworms=9000
+Nworms=0
+'rho0=murho + arho*sin(2*pi*(0.25+k0*x))'
+'U0_1_1=murho + arho*aUa*sin(2*pi*(0.25+k0*x))'
+'U0_2_1=murho + arho*aUr*sin(2*pi*(0.25+k0*x))'
+murho=9000.0
+arho=1.0
+aUa=0.6846227279629311
+aUr=0.088562372925828
+lamda=0.003974930217658144
+k0=4.0
+# srho0=90
+srho0=0
+ngroups=2
+# attractant
+nligands_1=1
+alpha_1=1500
+beta_1=5.56e-4
+s_1_1=0.01
+gamma_1_1=0.01
+D_1_1=1e-6
+# repellent
+nligands_2=1
+alpha_2=1500
+beta_2=-5.56e-4
+s_2_1=0.001
+gamma_2_1=0.001
+D_2_1=1e-5
+--petsc
+-ts_type rosw
+#-ts_type arkimex
+#-ts_type beuler
+-ts_arkimex_type 4
+-ts_adapt_type basic
+-ts_adapt_dt_max 10000
+-ts_adapt_dt_min 1e-20
+-ts_adapt_monitor 1
+-ts_adapt_clip 0.1,5
+-ksp_type preonly
+-pc_type lu
+-pc_factor_mat_solver_type mumps
+-snes_type ksponly
+-snes_max_funcs 2000
+-ksp_initial_guess_nonzero 0
+-ksp_max_it 2000
+-snes_converged_reason ascii
+-snes_view ascii
+-ksp_converged_reason ascii
+-options_left 1
+--
