@@ -259,10 +259,7 @@ rhomax=28000: used in computing Vrho. See thesis.
 cushion=2000: used in computing Vrho. See thesis.
 maxscale=2.0: used in computing Vrho. See thesis.
 s2=5.56e-4: Confusingly, this is the parameter called sigma in the
-    thesis. For historical reasons, it will be computed as
-    s2=sigma**2/2 if you specify sigma but not s2. You may not specify
-    both sigma and s2. This means you can't use sigma as a
-    user-defined paramter. I really ought to fix that.
+    thesis. 
 
 Ligands and ligand parameters:
 The architecture of chemical signals is somewhat complex, for reasons

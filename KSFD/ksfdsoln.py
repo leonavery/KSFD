@@ -114,16 +114,6 @@ class SolutionParameters:
         self.cparams = ParameterList() # command-line params
         self.cparams.decode(clargs.params, allow_new=True)
         self.params0.decode(clargs.params, allow_new=True)
-        if 'sigma' in self.cparams:
-            if 's2' in self.cparams:
-                raise KSFDException(
-                    's2 and sigma cannot both be specified'
-                )
-            self.params0['sigma'] = self.cparams['sigma']
-            self.params0['s2'] = self.params0['sigma']**2/2
-        if 's2' in self.cparams:
-            self.params0['sigma'] = sy.sqrt(2.0 * self.cparams['s2'])
-            self.params0['s2'] = self.params0['sigma']**2/2
         if not 'nwidth' in self.cparams:
             self.params0['nwidth'] = self.params0['nelements']
         if not 'nheight' in self.cparams:

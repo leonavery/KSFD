@@ -33,7 +33,7 @@ default_parameters = [
     ('rhomax', 28000, 'approximate max value of rho'),
     ('cushion', 2000, 'cushion on rho'),
     ('maxscale', 2.0, 'scale of cap potential'),
-    ('s2', 5.56e-4, 'random worm movement (sigma^2/2)'),
+    ('s2', 5.56e-4, 'random worm movement (sigma)'),
     ('Nworms', 0.0, 'total number of worms'),
     ('srho0', 90.0, 'standard deviation of rho(0)'),
     ('rho0', 9000.0, 'function for rho0, added to random rho0'),

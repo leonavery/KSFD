@@ -20,6 +20,7 @@ rhomin=1e-7
 rhomax=28000
 cushion=2000
 sigma=0.02357
+s2=sigma**2/2
 # Nworms=9000
 Nworms=0
 murho=9000.0
