@@ -1,0 +1,82 @@
+# This shows the use of noise injection during solution. We start with
+# an initial condition where most of the worms are located in blob at
+# the center of the domain. (murho0 is the mean density of worms.) 
+#
+--save=solutions/options113a
+--check=checks/checks113/options113a
+# --resume=checks/checks113/options113a_end
+# --seed=2
+--series_retries=10
+dt=1e-8
+CFL_safety_factor=0.5
+variance_rate=1e-6
+'variance_timing_function=floor(2.0*log(Max(1.0, t), 10.0))'
+conserve_worms=True
+tmax=2e5
+maxsteps=10000
+width=6.0
+height=6.0
+nelements=512
+randgridnw=512
+randgridnh=512
+dim=1
+degree=3
+atol=1.0
+rtol=1e-4
+rhomin=1e-7
+rhomax=28000
+cushion=2000
+slowdown=0.05
+olds=0.02357
+s2=slowdown*olds**2/2
+Nworms=0
+R=1.0
+murho0=6000.0
+brho0=100.0
+arho0=12*(murho0-brho0)/pi
+'rho0=brho0+arho0*sqrt(Max(0.0, 1.0 - (x-3.0)**2))'
+rsrho0=0.01
+'srho0=rsrho0*rho0'
+U0_1_1=0.0
+U0_2_1=0.0
+ngroups=2
+# attractant
+nligands_1=1
+alpha_1=1500
+beta_1=2*s2
+s_1_1=0.01
+gamma_1_1=0.01
+D_1_1=1e-6
+# repellent
+nligands_2=1
+alpha_2=1500
+beta_2=-2*s2
+# s_2_1=0.001
+gamma_2_1=0.001
+D_2_1=1e-5
+--petsc
+-ts_type rosw
+# -ts_type arkimex
+# -ts_type beuler
+# -ts_arkimex_type 4
+-ts_adapt_type basic
+-ts_adapt_dt_max 10000
+-ts_adapt_dt_min 1e-20
+-ts_adapt_monitor 1
+-ts_adapt_clip 0.1,5
+# -info			# Produces rather too much info
+-ksp_type preonly
+-pc_type lu
+-pc_factor_mat_solver_type mumps
+# Workaround for an incompatibility between ScaLaPack and MKL:
+-mat_mumps_icntl_13 1		# turn off ScaLaPack
+# -mat_mumps_icntl_33 1		# compute determinant
+-snes_type ksponly
+-snes_max_funcs 2000
+-ksp_initial_guess_nonzero 0
+-ksp_max_it 2000
+-snes_converged_reason ascii
+-snes_view ascii
+-ksp_converged_reason ascii
+-options_left 1
+--
