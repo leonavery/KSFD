@@ -1,5 +1,11 @@
+# This is an example of a problem that is too big to solve on your PC,
+# unless you have an unusually big PC. It is the same problem as
+# options81, but explanded to a 4x4 cm square. I solved this on the
+# graham.computecanada.ca HPC cluster. options84s16.sh is the bash
+# file submitted to the SLURM scheduler to solve this.
+#
 --save=solutions/options84
---check=checks/options84
+--check=checks/checks84//options84
 # --periodic
 dt=1e-8
 tmax=2e5
@@ -22,11 +28,6 @@ rho0=murho
 # U0_1_1=murho
 # U0_2_1=murho
 srho0=90
-arho=1.0
-aUa=0.6846227279629311
-aUr=0.088562372925828
-lambda=0.003974930217658144
-k0=4.0
 ngroups=2
 # attractant
 nligands_1=1
