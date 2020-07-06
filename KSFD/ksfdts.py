@@ -193,7 +193,8 @@ class KSFDTS(petsc4py.PETSc.TS):
             lastu.assemble()
             u = self.groom(u)
             super().step()
-            # gc.collect()
+            if k%20 == 0:       # every 20th step collect garbage
+                gc.collect()
             k = self.getStepNumber()
             h = self.getTimeStep()
             t = self.getTime()
