@@ -1,21 +1,18 @@
-# This is a two-dimensional problem small enough to run on a personal
-# computer. Like options80, it shows evolution from a uniform start
-# with a small amount of random noise. The initial condition is
-# uniform at 9000 with 1% noise. (To be exact, the noise is normal
-# with standard deviation 90.) It evolves to a final condition in
-# which the worms are arranged in disk-shaped aggregates in an
-# approximate hexagonal array.
+# This shows evolution from a uniform start with a small amoutn of
+# random noise. The initial condition is uniform at 9000 with 1%
+# noise. (To be exact, the noise is normal with standard deviation
+# 90.) It evolves to a final condition with 5 equally spaced peaks.
 #
-# This takes about 14 hours on my PC.
+# This takes abotu 4 min on my PC.
 #
---save=solutions/options81
---check=checks/checks81/options81
+--save=solutions/options80
+--check=checks/checks80/options80
 dt=1e-8
 tmax=2e5
 maxsteps=10000
 width=1
 nelements=384
-dim=2
+dim=1
 degree=3
 atol=0.01
 rtol=1e-6
@@ -30,6 +27,7 @@ rho0=murho
 # U0_1_1=murho
 # U0_2_1=murho
 srho0=90
+arho=1.0
 ngroups=2
 # attractant
 nligands_1=1
@@ -55,7 +53,6 @@ D_2_1=1e-5
 -ts_adapt_dt_min 1e-20
 -ts_adapt_monitor 1
 -ts_adapt_clip 0.1,5
--info
 -ksp_type preonly
 -pc_type lu
 -pc_factor_mat_solver_type mumps
