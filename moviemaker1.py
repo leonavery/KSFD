@@ -29,6 +29,10 @@ def parse(args=sys.argv[1:]):
     #
     parser.add_argument('-t', '--height', type=float, default=5.0,
                         help='image height')
+    parser.add_argument('--vmax', type=float, default=None,
+                        help='max value plotted')
+    parser.add_argument('--vmin', type=float, default=None,
+                        help='min value plotted')
     parser.add_argument('-d', '--dpi', type=int, default=150,
                         help='image height')
     parser.add_argument('-v', '--verbose', action='count')
@@ -87,12 +91,19 @@ def plot_curves(t, soln, opts=defplotopts):
         title = "%s\n%s"%(name, label)
         ra = fig.add_subplot(1, nplots, currplot, label=title)
         if dim == 1:
+            clipped = images[subspace]
+            if opts['vmin'] is not None:
+                clipped = np.maximum(clipped, opts['vmin'])
+            if opts['vmax'] is not None:
+                clipped = np.minimum(clipped, opts['vmax'])
             p = plt.plot(coords[0], images[subspace])
             plt.title(title)
         elif dim == 2:
             p = plt.imshow(
                 np.transpose(images[subspace]),
                 extent=(xmin, xmax, ymin, ymax),
+                vmin=opts['vmin'],
+                vmax=opts['vmax'],
                 origin='lower',
                 cmap='viridis',
                 interpolation='none'
@@ -151,6 +162,8 @@ def main():
         width=clargs.width,
         height=clargs.height,
         dpi=clargs.dpi,
+        vmin=clargs.vmin,
+        vmax=clargs.vmax,
     )
     for k,t in enumerate(times):
         if t < start:

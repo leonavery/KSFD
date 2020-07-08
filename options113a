@@ -28,7 +28,7 @@ rhomax=28000
 cushion=2000
 slowdown=0.05
 sigma=0.02357
-s2=slowdown*olds**2/2
+s2=slowdown*sigma**2/2
 Nworms=0
 R=1.0
 murho0=6000.0
@@ -51,7 +51,7 @@ D_1_1=1e-6
 nligands_2=1
 alpha_2=1500
 beta_2=-2*s2
-# s_2_1=0.001
+s_2_1=0.001
 gamma_2_1=0.001
 D_2_1=1e-5
 --petsc
