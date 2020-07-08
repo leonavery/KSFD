@@ -290,10 +290,14 @@ class KSFDTS(petsc4py.PETSc.TS):
         vmaxs = [
             np.max(np.abs(veld)) for veld in self.velocity
         ]
+        vmaxmaxs = [
+            self.mpi_comm.all_reduce(v, MPI.MAX)
+            for v in vmaxs
+        ]
         sw = self.derivs.grid.stencil_width
         hmaxs = [
-            s*sw/self.mpi_comm.allreduce(v, MPI.MAX)
-            for v,s in zip(vmaxs, self.derivs.grid.spacing)
+            float('inf) if v == 0.0 else s*sw/v
+            for v,s in zip(vmaxmaxs, self.derivs.grid.spacing)
         ]
         return np.min(hmaxs)
 

@@ -260,6 +260,24 @@ cushion=2000: used in computing Vrho. See thesis.
 maxscale=2.0: used in computing Vrho. See thesis.
 s2=5.56e-4: Confusingly, this is the parameter called sigma in the
     thesis. 
+CFL_safety_factor=0.0: Controls an alternative to PETSc TSAdapt for
+    adaptive time stepping. The CFL condition is that the time step
+    must be smaller than the half the stencil width divided by the
+    absolute value of velocity. If CFL_safety_factor <= 0, this is
+    ignored. But if CFL_safety_factor >= 0, the time step will be
+    constrained to less than 
+
+         CFL_safety_factor*Dx/max(abs(v(x)))
+
+    where v(x) is the x-component of the worm velocity at x and Dx is
+    the distance in the x direction from the center of each stencil to
+    its furthest point. The same calculation is done for y and z
+    dimensions if present, and the timestep is constrained to be the
+    minimum of all of them. 
+
+    CFL_safety_factor may be used in conjunction with TSAdapt. The
+    step size will be the minimum of the step sizes determiedn by the
+    two methods.
 
 Ligands and ligand parameters:
 The architecture of chemical signals is somewhat complex, for reasons
