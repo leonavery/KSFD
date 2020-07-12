@@ -90,6 +90,18 @@ def plot_curves(t, soln, opts=defplotopts):
     for name,subspace in zip(names, opts['subspaces']):
         title = "%s\n%s"%(name, label)
         ra = fig.add_subplot(1, nplots, currplot, label=title)
+        fmin, fmax = (
+            np.min(images[subspace]),
+            np.max(images[subspace])
+        )
+        if opts['vmin'] is not None:
+            vmin = max(fmin, opts['vmin'])
+        else:
+            vmin = fmin
+        if opts['vmax'] is not None:
+            vmax = min(fmax, opts['vmax'])
+        else:
+            vmax = fmax
         if dim == 1:
             clipped = images[subspace]
             if opts['vmin'] is not None:
@@ -102,8 +114,8 @@ def plot_curves(t, soln, opts=defplotopts):
             p = plt.imshow(
                 np.transpose(images[subspace]),
                 extent=(xmin, xmax, ymin, ymax),
-                vmin=opts['vmin'],
-                vmax=opts['vmax'],
+                vmin=vmin,
+                vmax=vmax,
                 origin='lower',
                 cmap='viridis',
                 interpolation='none'
@@ -113,10 +125,6 @@ def plot_curves(t, soln, opts=defplotopts):
                 plt.colorbar()
         else:
             raise KSFDException("can only plot 1 or 2 dimensions")
-        fmin, fmax = (
-            np.min(images[subspace]),
-            np.max(images[subspace])
-        )
         plt.xlabel('(%7g, %7g)'%(fmin,fmax), axes=ra)
         currplot += 1
     return(fig)
