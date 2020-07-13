@@ -239,7 +239,7 @@ class UfuncifyCodeWrapperMultiple(UfuncifyCodeWrapper):
         directory autowrap/<uuid> in the current directory, and is not
         cached. (Really, if would make more sense to use tempdir, and
         perhaps I will do that at some point, but it is a bit
-        problematic with MPI.
+        problematic with MPI.)
         """
         if self.filepath:
             warn('filepath {filepath} ignored'.format(

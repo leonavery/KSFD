@@ -195,6 +195,14 @@ class Derivatives:
         self.xcoords = np.append(self.xcoords, xcs, axis=0)
         self.stencil_sym_nums = self.stencil_sym_numbers()
 
+    def make_key(self, prefix):
+        tds = self.ps.time_dependent_symbols()
+        sdict = collections.OrderedDict(
+            (key, tds[key]) for key in sorted(tds.keys())
+        )
+        key = prefix + str(sdict)
+        return key
+
     #
     # The following attributes support just-in-time construction of
     # ufuncs, allowing for faster startup, which is convenient for
@@ -203,7 +211,7 @@ class Derivatives:
     @property
     def dUdt_ufs(self):
         if not getattr(self, '_dUdt_ufs', None):
-            key = 'dUdt_' + str(self.ps.time_dependent_symbols())
+            key = self.make_key('dUdt_')
             cached = cache_region.get(key=key)
             if cached:
                 self._dUdt_ufs = [
@@ -226,7 +234,7 @@ class Derivatives:
     @property
     def Guf(self):
         if not getattr(self, '_Guf', None):
-            key = 'Guf_' + str(self.ps.time_dependent_symbols())
+            key = self.make_key('Guf_')
             cached = cache_region.get(key=key)
             if cached:
                 (exps, oss) = cached
@@ -244,7 +252,7 @@ class Derivatives:
     @property
     def divrhogradGuf(self):
         if not getattr(self, '_divrhogradGuf', None):
-            key = 'divrhogradGuf_' + str(self.ps.time_dependent_symbols())
+            key = self.make_key('divrhogradGuf_')
             cached = cache_region.get(key=key)
             if cached:
                 (exps, oss) = cached
@@ -263,7 +271,7 @@ class Derivatives:
     @property
     def drhodt_ufs(self):
         if not getattr(self, '_drhodt_ufs', None):
-            key = 'drhodt_ufs_' + str(self.ps.time_dependent_symbols())
+            key = self.make_key('drhodt_ufs_')
             cached = cache_region.get(key=key)
             if cached:
                 self._drhodt_ufs = [
@@ -286,7 +294,7 @@ class Derivatives:
     @property
     def Jrhoufs(self):
         if not getattr(self, '_Jrhoufs', None):
-            key = 'Jrhoufs_' + str(self.ps.time_dependent_symbols())
+            key = self.make_key('Jrhoufs_')
             cached = cache_region.get(key=key)
             if cached:
                 self._Jrhoufs = [
@@ -783,7 +791,7 @@ class Derivatives:
             farr[stencil[-1]] for stencil in self.Guf.stencils
         ]
         for arg in self.Guf.inputs[len(self.Guf.stencils):]:
-            ufargs.append(pvalues[arg])
+            ufargs.append(pvalues[str(arg)])
         self.Garr = self.Guf.ufunc(*ufargs)
         drhodtva = self.divrhogradGuf(farr, G=self.Garr)
         # for uf in self.drhodt_ufs[1:]:
@@ -1328,9 +1336,10 @@ class StencilUfunc:
         args = set()
         for exp in exps:
             args.update(exp.free_symbols)
+        ss_set = args.intersection(self.derivs.stencil_sym_nums)
         sym_nums = np.array([
             self.derivs.stencil_sym_nums[sym]
-            for sym in args
+            for sym in ss_set
         ], dtype=int)
         sym_nums.sort()
         sym_list = list(self.derivs.stencil_sym_nums.keys())
@@ -1355,7 +1364,11 @@ class StencilUfunc:
                     unknowns=list(unknowns)
                 )
             )
-        self._inputs = list(stencil_syms) + list(tdsyms)
+        sorted_tdnames = sorted([
+            str(sym) for sym in tdsyms
+        ])
+        sorted_tdsyms = [sy.Symbol(name) for name in sorted_tdnames]
+        self._inputs = list(stencil_syms) + sorted_tdsyms
 
     def __str__(self):
         return str(self.expressions)
@@ -1412,7 +1425,7 @@ class StencilUfunc:
             for stencil in self.stencils
         ]
         for arg in self.inputs[len(self.stencils):]:
-            ufargs.append(pvalues[arg])
+            ufargs.append(pvalues[str(arg)])
         return self.ufunc(*ufargs, out=out, where=where, **kwargs)
 
     def build(self):
