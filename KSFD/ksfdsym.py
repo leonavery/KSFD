@@ -1106,6 +1106,7 @@ class Derivatives:
                 Jufuncsout += self.expanded_ufuncs(Jufuncsin[start])
                 start += 1
                 continue
+            success = True      # if we never enter the loop, it's OK
             for nxt in range(start+1, len(Jufuncsin)):
                 newmerge = merge.copy()
                 success = newmerge.merge(Jufuncsin[nxt]) < maxargs
