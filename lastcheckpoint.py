@@ -47,6 +47,8 @@ def main():
         list(map(int, cpre.fullmatch(fend).groups()))
         for fend in fends if cpre.fullmatch(fend)
     ], dtype=int)
+    if len(csr) == 0:
+        raise FileNotFoundError
     mcn = np.max(csr[:,0])
     checkpoint = prefix + '_' + str(mcn) + '_'
     mcn_fends = csr[csr[:,0] == mcn]
