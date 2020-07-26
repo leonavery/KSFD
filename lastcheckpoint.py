@@ -27,7 +27,8 @@ import numpy as np
 def parse_commandline(args=None):
     # clargs = Namespace()
     parser = Parser(description='Find last KSFD solution checkpoint')
-    parser.add_argument('-g', '--gather', action='store_true')
+    parser.add_argument('-g', '--gather', action='store_true',
+                        help='produce gather-type name')
     parser.add_argument('-v', '--verbose', action='count')
     parser.add_argument('prefix', nargs=1, help='checkpoint prefix')
     clargs = parser.parse_args(args=args)
