@@ -806,8 +806,8 @@ class Derivatives:
         #     drhodtva += uf(farr)
         # # correction = np.sum(drhodtva)/np.size(drhodtva)
         # # drhodtva -= correction  # kludge to enforce conservation
-        # if isinstance(fvec, petsc4py.PETSc.Vec):
-        #     self.grid.Vdmda.restoreLocalVec(lfvec)
+        if isinstance(fvec, petsc4py.PETSc.Vec):
+            self.grid.Vdmda.restoreLocalVec(lfvec)
         # # logSYM('correction, np.sum(drhodtva)', correction, np.sum(drhodtva))
         return drhodtva
 
