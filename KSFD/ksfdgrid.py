@@ -30,7 +30,7 @@ from mpi4py import MPI
 # This indexing interacts with the member attributes of the MatStencil
 # type, in that one needs to choose i, j, and k correctly. i
 # corresponds to the x dimension, as explained most clearly in the man
-# page for MatSetValuesStencil [2]. For sinatcen, it is explained:
+# page for MatSetValuesStencil [2]. For instance, it is explained:
 # "For example, if you create a DMDA with an overlap of one grid level
 # and on a particular process its first local nonghost x logical
 # coordinate is 6 (so its first ghost x logical coordinate is 5) the
