@@ -2,9 +2,9 @@
 # an initial condition where most of the worms are located in blob at
 # the center of the domain. (murho0 is the mean density of worms.) 
 #
---save=solutions/options113a
---check=checks/checks113/options113a
-# --resume=checks/checks113/options113a_end
+--save=solutions/options113b
+--check=checks/checks113/options113b
+# --resume=checks/checks113/options113b_end
 # --seed=2
 --series_retries=10
 dt=1e-8
@@ -69,7 +69,7 @@ D_2_1=1e-5
 -pc_type lu
 -pc_factor_mat_solver_type mumps
 # Workaround for an incompatibility between ScaLaPack and MKL:
--mat_mumps_icntl_13 1		# turn off ScaLaPack
+# -mat_mumps_icntl_13 1		# turn off ScaLaPack
 # -mat_mumps_icntl_33 1		# compute determinant
 -snes_type ksponly
 -snes_max_funcs 2000
