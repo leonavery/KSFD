@@ -166,7 +166,8 @@ class Derivatives:
             self.sources = [SpatialExpression('0.0')] * (ps.nligands + 1)
         else:
             self.sources = sources
-        if u0 is None:
+        self.own_u0 = u0 is None
+        if self.own_u0:
             self.u0 = self.grid.Vdmda.createGlobalVec()
             self.u0.zeroEntries()
         else:
@@ -194,6 +195,13 @@ class Derivatives:
         self.stencils = np.append(self.stencils, sts, axis=0)
         self.xcoords = np.append(self.xcoords, xcs, axis=0)
         self.stencil_sym_nums = self.stencil_sym_numbers()
+
+    def __del__(self):
+        if self.own_u0:
+            try:
+                self.u0.destroy()
+            except:
+                pass
 
     def make_key(self, prefix):
         tds = self.ps.time_dependent_symbols()
@@ -1197,6 +1205,7 @@ class Derivatives:
         farr = self.groom(farr)
         for d,suf in enumerate(self.vel_ufuncs):
             suf(farr, t=t, out=out[d])
+        self.grid.Vdmda.restoreLocalVec(lfvec)
         return out
     
 class StencilUfunc:

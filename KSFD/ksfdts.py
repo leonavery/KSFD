@@ -151,6 +151,21 @@ class KSFDTS(petsc4py.PETSc.TS):
         self.derivs.u0.copy(self.u)
         self.setTime(self.t0)
 
+    def __del__(self):
+        """Destroy PETSc objects"""
+        try:
+            self.kJ.destroy()
+        except AttributeError:
+            pass
+        try:
+            self.u.destroy()
+        except AttributeError:
+            pass
+        try:
+            self.f.destroy()
+        except AttributeError:
+            pass
+
     def solve(self, u=None):
         """Run the timestepper.
 
@@ -210,6 +225,7 @@ class KSFDTS(petsc4py.PETSc.TS):
             logTS('solvec - lastu.array', solvec - lastu.array)
             logTS('np.min(solvec)', np.min(solvec))
             self.monitor(k, t, u)
+        lastu.destroy()
 
     def groom(self, u):
         """Get rid of negatives and nans"""
@@ -307,9 +323,14 @@ class KSFDTS(petsc4py.PETSc.TS):
         Leaves history unchanged.
         """
         if hasattr(self, 'J'):
+            self.J.destroy()
             del self.J
+        else:
+            self.kJ.destroy()
         del self.kJ
+        self.u.destroy()
         del self.u
+        self.f.destroy()
         del self.f
 
     def printMonitor(self, ts, k, t, u):

@@ -701,7 +701,7 @@ def main(*args):
     options.setValue('ts_max_snes_failures', 100)
     resuming = commandlineArguments.resume or commandlineArguments.restart
     if commandlineArguments.onestep:
-        truemaxsteps = 0
+        truemaxsteps = 1
     else:
         truemaxsteps = ps.params0['maxsteps']
     ts = implicitTS(derivs,
@@ -743,8 +743,17 @@ def main(*args):
         logMAIN('saveMonitor closed')
     ts.cleanup()
     tseries.close()
+    try:
+        vec0.destroy()
+    except:
+        pass
+    try:
+        lvec0.destroy()
+    except:
+        pass
     if MPI.COMM_WORLD.rank == 0:
         print("SNES failures = ", ts.getSNESFailures())
+    del ts
 
 if __name__ == "__main__" and not in_notebook():
     # execute only if run as a script

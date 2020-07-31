@@ -2,9 +2,9 @@
 # an initial condition where most of the worms are located in blob at
 # the center of the domain. (murho0 is the mean density of worms.) 
 #
---save=solutions/options113a
---check=checks/checks113/options113a
-# --resume=checks/checks113/options113a_end
+--save=solutions/options113b
+--check=checks/checks113/options113b
+# --resume=checks/checks113/options113b_end
 # --seed=2
 --series_retries=10
 dt=1e-8
