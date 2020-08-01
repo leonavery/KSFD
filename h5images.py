@@ -56,6 +56,8 @@ def main():
                 params[key] = float(val)
             elif isinstance(val, sy.Integer):
                 params[key] = int(val)
+            elif isinstance(val, sy.Basic):
+                params[key] = str(val)
         h5fname = clargs.frameprefix + '_' + frname + '%05d'%k + '.h5'
         if clargs.verbose:
             print('saving %s %d, t= %7g, %s'%(frname, k, t, h5fname))

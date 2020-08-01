@@ -8,12 +8,23 @@ may be built without support for parallel operation. (In particular,
 the conda-forge version doesn't have it.) This is accomplished through
 the following kludge:
 
-When a KSFD.TimeSeries is created with name tsname, the runtime
-envirnoment is checked to find out if parallel HDF5 is enabled (using
-h5py.getconfig().mpi). If so, the data are stored in an HDF5 file
-named 
+When a KSFD.TimeSeries is created with name tsname and argument mpiok
+True, the runtime envirnoment is checked to find out if parallel HDF5
+is enabled (using h5py.getconfig().mpi). If so, the data are stored in
+an HDF5 file named
 
 '{name}MPI.h5'.format(name=tsname). 
+
+Note: there is a serious problem with parallel HDF5: variable length
+records can't be written. If you try, you get this exception:
+
+OSError: Can't write data (Parallel IO does not support writing VL
+datatypes yet)
+
+Since that makes parallel HDF5 a nonstarter for my purposes, mpiok
+defaults to False. You won't get parallel MPI unless you specifically
+ask for it, and then dealing with the lack of VL records is your
+problem.
 
 If not, each process stores the data it owns in a file named
 
@@ -73,7 +84,7 @@ class KSFDTimeSeries:
             basename,
             size=1,
             rank=0,
-            mpiok=True,
+            mpiok=False,
             mode='r+',
             retries=0,
             retry_interval=60
@@ -88,7 +99,7 @@ class KSFDTimeSeries:
             comm.size for an MPI communicator comm.
         rank=0: Number of the MPI process that created this
             file. Typically comm.rank.
-        mpiOK=True: Whether parallel HDF5 should be used to store to
+        mpiok=True: Whether parallel HDF5 should be used to store to
             store all the data from all MPI processes in a single
             file.
         mode='r+': The file mode for opening the h5py.File.
@@ -166,7 +177,7 @@ class KSFDTimeSeries:
             #     )
             self.myslice = (slice(0, None),)*(self.dim + 1)
         else:
-            self._ranges = ((0, np) for np in grid.nps)
+            self._ranges = tuple((0, np) for np in grid.nps)
             #
             # Slice of the global array belonging to this process:
             self.myslice = (slice(0, None),) + tuple(
@@ -216,8 +227,8 @@ class KSFDTimeSeries:
             self.creating = mode != 'r'
             self.rank_owns_file = not self.usempi
             self.filename = name_mpi if self.usempi else name_nompi
-        if self.creating and not self.rank_owns_file and usempi:
-            self.driver = 'mpi'
+        if self.creating and not self.rank_owns_file and self.usempi:
+            self.driver = 'mpio'
         if self.creating:
             os.makedirs(os.path.dirname(self.filename), exist_ok=True)
         return self.filename
@@ -386,7 +397,8 @@ class KSFDTimeSeries:
             self,
             fname=None,
             mode=None,
-            driver=None
+            driver=None,
+            comm=None
     ):
         if fname is None:
             fname = self.filename
@@ -394,9 +406,15 @@ class KSFDTimeSeries:
             mode = self.mode
         if driver is None:
             driver = self.driver
+        if comm is None:
+            comm = self.comm
         try:
-            tsf = h5py.File(fname, mode=mode,
-                            driver=driver)
+            if self.usempi:
+                tsf = h5py.File(fname, mode=mode,
+                                driver=driver, comm=comm)
+            else:
+                tsf = h5py.File(fname, mode=mode,
+                                driver=driver)
         except OSError:
             retries_left = self.retries
             if retries_left <= 0:
@@ -583,6 +601,7 @@ class TimeSeries(KSFDTimeSeries):
             basename,
             grid=None,
             comm=None,
+            mpiok=False,
             mode='r+',
             retries=0,
             retry_interval=60
@@ -601,6 +620,7 @@ class TimeSeries(KSFDTimeSeries):
             read from the file if not supplied.
         comm: the MPI communicator. (If not supplied, grid.comm is
             used.)
+        mpiok=False: whether it is Ok to use parallel HDF5.
         mode: the file mode (See h5py.h5File.)
         retries=0. If nonzero, retry faile dopens this many times.
         retry_interval=60: time (in secodns) between successive
@@ -616,8 +636,9 @@ class TimeSeries(KSFDTimeSeries):
         self._mode = mode
         self._size = self.comm.size
         self._rank = self.comm.rank
+        self.mpiok = mpiok
         super().__init__(basename, size=self.size, rank=self.rank,
-                         mode=mode, retries=retries,
+                         mpiok=mpiok, mode=mode, retries=retries,
                          retry_interval=retry_interval)
         if (grid):
             self.set_grid(grid)

@@ -326,7 +326,6 @@ AUTOWRAP_SCRATCH: If the value of this variable is set and points to a
 directory, it will be used as the location of a cache in which
 compiled sympy expression will be stored. You should definitely take
 advantage of this.
-
 """
 import petsc4py
 import sys
@@ -673,16 +672,20 @@ def main(*args):
             basename=commandlineArguments.save,
             grid=grid,
             mode='w',
+            mpiok=True,
             retries=commandlineArguments.series_retries,
             retry_interval=commandlineArguments.series_retry_interval,
         )
-        tseries.info['commandlineArguments'] = dill.dumps(
+        tseries.info['commandlineArguments'] = np.string_(dill.dumps(
             commandlineArguments,
             protocol=0
+        ))
+        tseries.info['SolutionParameters'] = np.string_(
+            dill.dumps(ps, recurse=True, protocol=0)
         )
-        tseries.info['SolutionParameters'] = dill.dumps(ps, recurse=True,
-                                                        protocol=0)
-        tseries.info['sources'] = dill.dumps(sources, protocol=0)
+        tseries.info['sources'] = np.string_(
+            dill.dumps(sources, protocol=0)
+        )
         tseries.info['dt'] = float(ps.params0['dt'])
         if 'lastvart' in ps.params0:
             tseries.info['lastvart'] = float(ps.params0['lastvart'])
