@@ -388,6 +388,8 @@ def parse_commandline(args=None):
                         help='# retries to open TimeSeries')
     parser.add_argument('--series_retry_interval', type=int, default=60,
                         help='time (s) between open retries')
+    parser.add_argument('--mpiok', action='store_true',
+                        help='use parallel HDF5')
     parser.add_argument('--showparams', action='store_true',
                         help='print all parameters')
     parser.add_argument('--noperiodic', action='store_true',
@@ -518,6 +520,7 @@ def resume_values(clargs, grid, ps):
     cpf = TimeSeries(
         resuming,
         grid=grid,
+        mpiok=clargs.mpiok,
         mode='r',
         retries=clargs.series_retries,
         retry_interval=clargs.series_retry_interval
@@ -672,7 +675,7 @@ def main(*args):
             basename=commandlineArguments.save,
             grid=grid,
             mode='w',
-            mpiok=True,
+            mpiok=commandlineArguments.mpiok,
             retries=commandlineArguments.series_retries,
             retry_interval=commandlineArguments.series_retry_interval,
         )
@@ -728,7 +731,10 @@ def main(*args):
         ts.setMonitor(
             ts.checkpointMonitor,
             (),
-            {'prefix': commandlineArguments.check}
+            {
+                'prefix': commandlineArguments.check,
+                'mpiok': commandlineArguments.mpiok
+            }
         )
         logMAIN('checkpointMonitor set')
     try:

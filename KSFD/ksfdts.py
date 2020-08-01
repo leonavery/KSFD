@@ -366,17 +366,16 @@ class KSFDTS(petsc4py.PETSc.TS):
             u = u.array.copy()
         ))
 
-    def checkpointMonitor(self, ts, k, t, u, prefix):
+    def checkpointMonitor(self, ts, k, t, u, prefix, mpiok):
         """For use as TS monitor. Checkpoints results"""
         h = ts.getTimeStep()
-        #
-        # make a local copy of the dof vector
-        #
         cpname = prefix + '_' + str(k) + '_'
         cpf = TimeSeries(
             cpname,
             grid=self.derivs.grid,
+            mpiok=mpiok,
             mode='w',
+            comm=self.comm,
             retries=self.derivs.ps.clargs.series_retries,
             retry_interval=self.derivs.ps.clargs.series_retry_interval
         )
@@ -384,18 +383,18 @@ class KSFDTS(petsc4py.PETSc.TS):
             del cpf.info['commandlineArguments']
         except KeyError:
             pass
-        cpf.info['commandlineArguments'] = dill.dumps(
+        cpf.info['commandlineArguments'] = np.string_(dill.dumps(
             self.derivs.ps.clargs,
             protocol=0
-        )
+        ))
         try:
             del cpf.info['SolutionParameters']
         except KeyError:
             pass
-        cpf.info['SolutionParameters'] = dill.dumps(
+        cpf.info['SolutionParameters'] = np.string_(dill.dumps(
             self.derivs.ps, recurse=True,
             protocol=0
-        )
+        ))
         dtd = cpf.info.require_dataset('dt', shape=(), dtype=float)
         dtd[()] = float(h)
         lastvartd = cpf.info.require_dataset('lastvart', shape=(),
@@ -406,10 +405,10 @@ class KSFDTS(petsc4py.PETSc.TS):
                 del cpf.info['sources']
             except KeyError:
                 pass
-            cpf.info['sources'] = dill.dumps(
+            cpf.info['sources'] = np.string_(dill.dumps(
                 self.derivs.sources,
                 protocol=0
-            )
+            ))
         except AttributeError:
             pass
         cpf.store(u, t, k=k)

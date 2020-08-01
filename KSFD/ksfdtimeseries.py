@@ -408,11 +408,13 @@ class KSFDTimeSeries:
             driver = self.driver
         if comm is None:
             comm = self.comm
+        if isinstance(comm, petsc4py.PETSc.Comm):
+            comm = comm.tompi4py()
         try:
-            if self.usempi:
+            try:
                 tsf = h5py.File(fname, mode=mode,
                                 driver=driver, comm=comm)
-            else:
+            except TypeError:
                 tsf = h5py.File(fname, mode=mode,
                                 driver=driver)
         except OSError:
@@ -427,8 +429,12 @@ class KSFDTimeSeries:
                 logSERIES('tb.format_exc()', tb.format_exc())
                 time.sleep(self.retry_interval)
                 try: 
-                    tsf = h5py.File(self.filename, mode=mode,
-                                    driver=self.driver)
+                    try:
+                        tsf = h5py.File(fname, mode=mode,
+                                        driver=driver, comm=comm)
+                    except TypeError:
+                        tsf = h5py.File(fname, mode=mode,
+                                        driver=driver)
                     failed = False
                 except OSError:
                     failed = True
