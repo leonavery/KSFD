@@ -206,14 +206,18 @@ class KSFDTimeSeries:
         name_mpi = '{name}MPI.h5'.format(name=basename)
         name_seq = '{name}s1r0.h5'.format(name=basename)
         self.driver = None
-        if os.path.isfile(name_nompi):
+        if self.usempi and os.path.isfile(name_mpi):
+            self.creating = mode[0] == 'w' or mode[0] == 'x'
+            self.rank_owns_file = size == 1
+            self.filename = name_mpi
+        elif self.usempi and (mode[0] == 'w' or mode[0] == 'x'):
+            self.creating = True
+            self.rank_owns_file = size == 1
+            self.filename = name_mpi
+        elif os.path.isfile(name_nompi):
             self.creating = mode[0] == 'w' or mode[0] == 'x'
             self.rank_owns_file = True
             self.filename = name_nompi
-        elif self.usempi and os.path.isfile(name_mpi):
-            self.creating = mode[0] == 'w' or mode[0] == 'x'
-            self.rank_owns_file = False
-            self.filename = name_mpi
         elif (mode == 'r' or mode == 'a') and os.path.isfile(name_seq):
             self.creating = False
             self.rank_owns_file = size == 1
@@ -231,6 +235,11 @@ class KSFDTimeSeries:
             self.driver = 'mpio'
         if self.creating:
             os.makedirs(os.path.dirname(self.filename), exist_ok=True)
+        logSERIES('self.filename', self.filename)
+        logSERIES('self.creating', self.creating)
+        logSERIES('self.rank_owns_file', self.rank_owns_file)
+        logSERIES('self.driver', self.driver)
+        logSERIES('self.usempi', self.usempi)
         return self.filename
 
     def open(self, filename, usempi, mode):
@@ -410,6 +419,7 @@ class KSFDTimeSeries:
             comm = self.comm
         if isinstance(comm, petsc4py.PETSc.Comm):
             comm = comm.tompi4py()
+        logSERIES('fname, mode, driver, comm', fname, mode, driver, comm)
         try:
             try:
                 tsf = h5py.File(fname, mode=mode,
