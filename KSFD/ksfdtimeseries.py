@@ -724,6 +724,7 @@ class Gatherer(KSFDTimeSeries):
 
         Gatherer is read-only (mode 'r'). 
         """
+        self._comm = MPI.COMM_SELF
         self.retries = retries
         self.retry_interval = retry_interval
         gatherre = '(.+)s(\d+)@.*'
