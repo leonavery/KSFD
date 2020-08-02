@@ -421,10 +421,14 @@ class KSFDTimeSeries:
             comm = comm.tompi4py()
         logSERIES('fname, mode, driver, comm', fname, mode, driver, comm)
         try:
-            try:
+            if driver == 'mpio':
+                logSERIES('trying 4-argument open')
+                comm.Barrier()
+                logSERIES('comm.rank, comm.size', comm.rank, comm.size)
                 tsf = h5py.File(fname, mode=mode,
                                 driver=driver, comm=comm)
-            except TypeError:
+            else:
+                logSERIES('trying 3-argument open')
                 tsf = h5py.File(fname, mode=mode,
                                 driver=driver)
         except OSError:
@@ -439,10 +443,14 @@ class KSFDTimeSeries:
                 logSERIES('tb.format_exc()', tb.format_exc())
                 time.sleep(self.retry_interval)
                 try: 
-                    try:
+                    if driver == 'mpio':
+                        logSERIES('trying 4-argument open')
+                        comm.Barrier()
+                        logSERIES('comm.rank, comm.size', comm.rank, comm.size)
                         tsf = h5py.File(fname, mode=mode,
                                         driver=driver, comm=comm)
-                    except TypeError:
+                    else:
+                        logSERIES('trying 3-argument open')
                         tsf = h5py.File(fname, mode=mode,
                                         driver=driver)
                     failed = False

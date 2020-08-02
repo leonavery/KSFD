@@ -751,7 +751,6 @@ def main(*args):
         tseries.close()
         logMAIN('saveMonitor closed')
     ts.cleanup()
-    tseries.close()
     grid.cleanup()
     try:
         vec0.destroy()
@@ -763,10 +762,10 @@ def main(*args):
         pass
     if MPI.COMM_WORLD.rank == 0:
         print("SNES failures = ", ts.getSNESFailures())
-    try:
-        PETSc._finalize()
-    except PETSc.Error:
-        pass
+    # try:
+    #     PETSc._finalize()
+    # except PETSc.Error:
+    #     pass
     logMAIN('returning 0 from main')
     return 0
 
@@ -775,7 +774,7 @@ if __name__ == "__main__" and not in_notebook():
     try:
         status = main()
     except PETSc.Error:
-        pass
+        logMAIN('main threw PETSc.Error')
     logMAIN('exit status', status)
     sys.exit(status)
 

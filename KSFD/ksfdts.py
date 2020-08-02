@@ -322,16 +322,16 @@ class KSFDTS(petsc4py.PETSc.TS):
 
         Leaves history unchanged.
         """
-        if hasattr(self, 'J'):
-            self.J.destroy()
-            del self.J
-        else:
-            self.kJ.destroy()
         del self.kJ
         self.u.destroy()
         del self.u
         self.f.destroy()
         del self.f
+        # if hasattr(self, 'J'):
+        #     self.J.destroy()
+        #     del self.J
+        # else:
+        #     self.kJ.destroy()
 
     def printMonitor(self, ts, k, t, u):
         """For use as TS monitor. Prints status of solution."""
