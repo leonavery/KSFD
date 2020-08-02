@@ -124,9 +124,9 @@ class Grid:
             ghost points)
         Cashape: the shape of the local coordinate array (including
             ghost points)
-        coordsNoGhosts: An ndarry of shape globalCshape containing the
+        coordsNoGhosts: An ndarray of shape globalCshape containing the
             coordinates of the points in a global vector
-        coordsWithGhosts: An ndarry of shape Cashape containing the
+        coordsWithGhosts: An ndarray of shape Cashape containing the
             coordinates of the points in a local array.
         """
         #
@@ -432,6 +432,16 @@ class Grid:
         if outarray.ndim > self.dim:
             slices[:0] = [stencil[-1]]
         return outarray[tuple(slices)]
+
+    def cleanup(self):
+        """Destroy any PETSc objects we created"""
+        for a in ['_clocal', '_Sdmda', '_Vdmda', '_Cdmda']:
+            obj = getattr(self, a, None)
+            if obj:
+                obj.destroy()
+
+    def __del__(self):
+        self.cleanup()
 
     #
     # Pickling: The assumption behind these pickling functions is that

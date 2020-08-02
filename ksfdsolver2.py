@@ -752,6 +752,7 @@ def main(*args):
         logMAIN('saveMonitor closed')
     ts.cleanup()
     tseries.close()
+    grid.cleanup()
     try:
         vec0.destroy()
     except:
@@ -766,19 +767,14 @@ def main(*args):
         PETSc._finalize()
     except PETSc.Error:
         pass
-    #
-    # This Finalize call produces the message:
-    # "Attempting to use an MPI routine after finalizing",
-    # however, it I don't do this, I get a SIGSEGV or PETSc.Error at
-    # exit.
-    #
-    MPI.Finalize()
-    # Not reached
     return 0
 
 if __name__ == "__main__" and not in_notebook():
     # execute only if run as a script
-    status = main()
+    try:
+        status = main()
+    except PETSc.Error:
+        pass
     logMAIN('exit status', status)
     sys.exit(status)
 
