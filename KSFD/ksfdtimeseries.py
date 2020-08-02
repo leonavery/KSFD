@@ -470,8 +470,8 @@ class KSFDTimeSeries:
         del self._tsf
         gc.collect()
         
-    def __del__(self):
-        self.close()
+    # def __del__(self):
+    #     self.close()
 
     def store(self, data, t, k=None):
         if isinstance(data, petsc4py.PETSc.Vec):

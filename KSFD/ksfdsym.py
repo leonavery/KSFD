@@ -196,12 +196,12 @@ class Derivatives:
         self.xcoords = np.append(self.xcoords, xcs, axis=0)
         self.stencil_sym_nums = self.stencil_sym_numbers()
 
-    def __del__(self):
-        if self.own_u0:
-            try:
-                self.u0.destroy()
-            except:
-                pass
+    # def __del__(self):
+    #     if self.own_u0:
+    #         try:
+    #             self.u0.destroy()
+    #         except:
+    #             pass
 
     def make_key(self, prefix):
         tds = self.ps.time_dependent_symbols()

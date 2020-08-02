@@ -762,7 +762,17 @@ def main(*args):
         pass
     if MPI.COMM_WORLD.rank == 0:
         print("SNES failures = ", ts.getSNESFailures())
-    del ts
+    try:
+        PETSc._finalize()
+    except PETSc.Error:
+        pass
+    #
+    # This Finalize call produces the message:
+    # "Attempting to use an MPI routine after finalizing",
+    # however, it I don't do this, I get a SIGSEGV or PETSc.Error at
+    # exit.
+    #
+    MPI.Finalize()
 
 if __name__ == "__main__" and not in_notebook():
     # execute only if run as a script
