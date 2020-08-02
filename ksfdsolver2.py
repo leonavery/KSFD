@@ -767,6 +767,7 @@ def main(*args):
         PETSc._finalize()
     except PETSc.Error:
         pass
+    logMAIN('returning 0 from main')
     return 0
 
 if __name__ == "__main__" and not in_notebook():
