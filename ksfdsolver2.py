@@ -773,7 +773,9 @@ def main(*args):
     # exit.
     #
     MPI.Finalize()
+    return 0
 
 if __name__ == "__main__" and not in_notebook():
     # execute only if run as a script
-    main()
+    sys.exit(main())
+

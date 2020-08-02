@@ -151,20 +151,20 @@ class KSFDTS(petsc4py.PETSc.TS):
         self.derivs.u0.copy(self.u)
         self.setTime(self.t0)
 
-    def __del__(self):
-        """Destroy PETSc objects"""
-        try:
-            self.kJ.destroy()
-        except AttributeError:
-            pass
-        try:
-            self.u.destroy()
-        except AttributeError:
-            pass
-        try:
-            self.f.destroy()
-        except AttributeError:
-            pass
+    # def __del__(self):
+    #     """Destroy PETSc objects"""
+    #     try:
+    #         self.kJ.destroy()
+    #     except AttributeError:
+    #         pass
+    #     try:
+    #         self.u.destroy()
+    #     except AttributeError:
+    #         pass
+    #     try:
+    #         self.f.destroy()
+    #     except AttributeError:
+    #         pass
 
     def solve(self, u=None):
         """Run the timestepper.
