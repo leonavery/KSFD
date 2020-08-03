@@ -77,6 +77,17 @@ List of options:
   <prefix>_<n>_, where <n> is the deciaml number of the time step
   (starting at 0). 
 
+--mpiok: This poorly named option controls the use of parallel MPI. In
+  principle, if you have a parallel-enabled install of HDF5 and h5py,
+  then specifying this option and running an MPI-multiprocess solution
+  will result in the creation of a single solution file called
+  <prefix>MPI.h5. (Otherwise ksfdsolver2 creates one file for each
+  process, which you must later merge.) Checkpoints are likewise
+  created as single files. In practice, for reasons I have not yet
+  been able to figure out, this option doesn't work, but instead
+  causes a deadlock at the first attempt to open the collective
+  file. So, currently useless.
+
 --resume=<prefix>: Resume an interrupted solution from a
   checkpoint, e.g. '--resume=checks/checks109/options109a_459_'. You
   may also resume from a solution file created using
