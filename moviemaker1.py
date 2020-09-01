@@ -42,7 +42,7 @@ def parse(args=sys.argv[1:]):
                         help='comma-separated subspace names (for labeling plots)')
     parser.add_argument('--label', type=str, default='t',
                         help='parameter with which to label plots')
-    parser.add_argument('--format_time', action='store_false',
+    parser.add_argument('--format_time', type=str, default='t',
                         help='format a time label')
     parser.add_argument('-ss', '--subspace', action='append',
                         default=[], help="subspaces to plot")
@@ -54,7 +54,7 @@ defplotopts=dict(
     colorbar=True,
     subspaces=[0, 1],
     label='t',
-    tformat=True,
+    tformat='t',
 )
 
 def plot_curves(t, soln, opts=defplotopts):
@@ -82,9 +82,9 @@ def plot_curves(t, soln, opts=defplotopts):
         labelval = params[opts['label']]
     except KeyError:
         labelval = t
-    if opts['label'] == 't' and opts['tformat']:
-        ti = datetime.timedelta(seconds=np.round(labelval))
-        label='t = ' + str(ti)
+    if opts['label'] == opts['tformat']:
+        ti = datetime.timedelta(seconds=int(np.round(labelval)))
+        label= opts['label'] + ' = ' + str(ti)
     else:
         label = '%s = %.4g'%(opts['label'], labelval)
     for name,subspace in zip(names, opts['subspaces']):
