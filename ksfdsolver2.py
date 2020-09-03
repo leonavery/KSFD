@@ -715,7 +715,7 @@ def main(*args):
     lv0a = lvec0.array.reshape(grid.Vashape, order='F')
     logMAIN('lv0a[:]', lv0a[:])
     options = PETSc.Options()
-    options.setValue('ts_max_snes_failures', 100)
+    # options.setValue('ts_max_snes_failures', 100)
     resuming = commandlineArguments.resume or commandlineArguments.restart
     if commandlineArguments.onestep:
         truemaxsteps = 1
