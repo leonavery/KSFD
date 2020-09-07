@@ -6,6 +6,7 @@ from datetime import datetime
 import h5py
 import pickle
 import dill
+import zipfile
 import petsc4py
 from mpi4py import MPI
 try:
@@ -366,10 +367,35 @@ class KSFDTS(petsc4py.PETSc.TS):
             u = u.array.copy()
         ))
 
-    def checkpointMonitor(self, ts, k, t, u, prefix, mpiok):
-        """For use as TS monitor. Checkpoints results"""
+    def checkpointMonitor(self, ts, k, t, u, prefix, mpiok=False):
+        """For use as TS monitor. Checkpoints results
+        
+        Required positional parameters:
+        ts: the TimeStepper (usually the same as self)
+        k: current step number
+        t: time of this point
+        u: the solution vector to be saved
+        prefix: the prefix from which to construct the checkpoint
+            filenames. The actual TimeSeries prefix is prefix_<k>_,
+            where <k> is the decimal string of k.
+            As a special case, if prefix ends with '.zip', then a zip
+            archive is created and checkpoints are added to it at each
+            step. The name of the zip archive will be
+            prefix[:-4]s<size>r<rank>.zip. (There is a separate zip
+            archive for each rank, to avoid concurrent writes from
+            different processes.)
+        
+        Optional keyword parameter:
+        mpiok=False: whether to use HDF% parallel mode. (Doesn't
+        currently work.)
+        """
         h = ts.getTimeStep()
-        cpname = prefix + '_' + str(k) + '_'
+        zipit = prefix.endswith('.zip')
+        if zipit:
+            realpfx = prefix[:-4]
+        else:
+            realpfx = prefix
+        cpname = realpfx + '_' + str(k) + '_'
         cpf = TimeSeries(
             cpname,
             grid=self.derivs.grid,
@@ -412,7 +438,24 @@ class KSFDTS(petsc4py.PETSc.TS):
         except AttributeError:
             pass
         cpf.store(u, t, k=k)
+        cpfname = cpf.filename
         cpf.close()
+        if (zipit):
+            zfname = os.path.splitext(prefix)[0]
+            zfname += 's{size}r{rank}.zip'.format(
+                size=self.comm.size, rank=self.comm.rank
+            )
+            zfmode = 'w' if k == 0 else 'a'
+            try:
+                zf = zipfile.ZipFile(zfname, mode=zfmode,
+                                     compression=zipfile.ZIP_DEFLATED)
+            except RuntimeError:
+                zf = zipfile.ZipFile(zfname, mode=zfmode,
+                                     compression=zipfile.ZIP_STORED)
+            with zf:
+                zf.write(cpfname)
+                os.remove(cpfname)
+        
 
     def makeSaveMonitor(self, timeseries):
         """Make a saveMonitor for use as a TS monitor
