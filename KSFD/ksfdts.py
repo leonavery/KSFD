@@ -448,14 +448,12 @@ class KSFDTS(petsc4py.PETSc.TS):
             zfmode = 'w' if k == 0 else 'a'
             try:
                 zf = zipfile.ZipFile(zfname, mode=zfmode,
-                                     arcname=os.path.basename(zfname),
                                      compression=zipfile.ZIP_DEFLATED)
             except RuntimeError:
                 zf = zipfile.ZipFile(zfname, mode=zfmode,
-                                     arcname=os.path.basename(zfname),
                                      compression=zipfile.ZIP_STORED)
             with zf:
-                zf.write(cpfname)
+                zf.write(cpfname, arcname=os.path.basename(zfname))
                 os.remove(cpfname)
         
 
