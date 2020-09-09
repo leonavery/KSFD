@@ -453,7 +453,7 @@ class KSFDTS(petsc4py.PETSc.TS):
                 zf = zipfile.ZipFile(zfname, mode=zfmode,
                                      compression=zipfile.ZIP_STORED)
             with zf:
-                zf.write(cpfname, arcname=os.path.basename(zfname))
+                zf.write(cpfname, arcname=os.path.basename(cpfname))
                 os.remove(cpfname)
         
 
