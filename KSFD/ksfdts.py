@@ -454,7 +454,10 @@ class KSFDTS(petsc4py.PETSc.TS):
                                      compression=zipfile.ZIP_STORED)
             with zf:
                 zf.write(cpfname, arcname=os.path.basename(cpfname))
-                os.remove(cpfname)
+                try:
+                    os.remove(cpfname)
+                except RuntimeError:
+                    pass
         
 
     def makeSaveMonitor(self, timeseries):
