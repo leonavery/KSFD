@@ -25,7 +25,7 @@ set python=`which python`
 mkdir -p $images
 rm $images/*frame*.png
 gtime -v gnice -n 19 $python $moviemaker -v -n 1501 -e 10000 --vmax=$vmax -w $width -t $height --subspace=$subspaces --names=$ssnames -p $prefix "$iname"a
-gtime -v gnice -n 19 $python $moviemaker -v -n 1501 -s 10000 -e 200000 --vmax=$max -w $width -t $height --subspace=$subspaces --names=$ssnames -p $prefix "$iname"b
+gtime -v gnice -n 19 $python $moviemaker -v -n 1501 -s 10000 -e 200000 --vmax=$vmax -w $width -t $height --subspace=$subspaces --names=$ssnames -p $prefix "$iname"b
 rm "$iname"b_frame00000.png
 ffmpeg -y -framerate 15 -pattern_type glob -i "$iname"'[ab]_frame*.png' -pix_fmt yuv420p -vf scale=w=-2:h=0 $movie </dev/null
 
