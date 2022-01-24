@@ -259,7 +259,7 @@ conserve_worms=False: If True, rho will be scaled after
     variance injecttion such that the total number of worms (i.e., the
     sum of rho over all grid points) remains constant.
 
-The nosie injection system is a work in progress and may change.
+The noise injection system is a work in progress and may change.
 
 Parameters that may usefully be time-dependent:
 Umin=1e-7: If ligand concentration at a point falls below Umin, it will
@@ -297,7 +297,7 @@ groups. (A group may and usually does contain only a single ligand.)
 Within a group each ligand has a weight weight_<g>_<l>, a secretion rate
 s_<g>_<l>, a diffusion constant D_<g>_<l>, and a decay rate
 gamma<g>_<l>, where <g> is the group number and <l> the ligand number
-with that group. The ligand itself has the name U_<g><l>. (Unusually
+with that group. The ligand itself has the name U_<g>_<l>. (Unusually
 for python, I start the numbering at 1, not 0.) Each group has
 parameters alpha<g> and beta<g>. To compute the potential due to a
 ligand group, first compute the weighted sum of the concentrations of
@@ -309,7 +309,7 @@ implemented. Finally, to get the potential due to all the signals, add
 up the potential of the groups. The parameters thus are
 
 ngroups=1: The number of ligand groups
-nligands_<g>=21: number of ligands in group <g>
+nligands_<g>=1: number of ligands in group <g>
 alpha_<g>=1.0: As above.
 beta_<g>=1.0: As above.
 weight_<g>_<l>=1.0: As above.
