@@ -17,15 +17,15 @@ def dillnp(*args, **kwargs):
     arguments of dillnp are passed directly to dill.dumps.
     """
     obj_bytes = dill.dumps(*args, **kwargs)
-    obj_numpy = np.array(list(obj_bytes), dtype='uint8')
+    obj_numpy = np.array(list(obj_bytes), dtype=np.uint8)
     return obj_numpy
 
 def dillunp(obj_numpy):
     """Reverse the action of dillnp)
     """
     assert (isinstance(obj_numpy, np.ndarray) and
-            obj_numpy.dtype == np.dtype('uint8'))
-    obj_bytes = bytes(obj_numpy)
+            obj_numpy.dtype == np.uint8)
+    obj_bytes = obj_numpy.tobytes()
     return dill.loads(obj_bytes)
 
 def ksfdTS(
