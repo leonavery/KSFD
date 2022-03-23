@@ -8,6 +8,7 @@ import os
 import sympy as sy
 import shutil
 import uuid, re
+import warnings
 import tempfile
 from subprocess import STDOUT, CalledProcessError, check_output
 from string import Template
@@ -45,10 +46,12 @@ else:
     )
 
 from sympy.core.cache import cacheit
-try:                            # sympy 1.5 needed this: 1.6 barfs on it
-    from sympy.core.compatibility import range, iterable
-except ImportError:
-    pass
+with warnings.catch_warnings():
+    warnings.simplefilter(category=DeprecationWarning, action='error')
+    try:                      # sympy 1.5 needed this: 1.6+ barf on it
+        from sympy.core.compatibility import range, iterable
+    except (ImportError, DeprecationWarning):
+        pass
 from sympy.core.function import Lambda
 from sympy.core.relational import Eq
 from sympy.core.symbol import Dummy, Symbol

@@ -355,7 +355,7 @@ from KSFD import (KSFDException, Grid, TimeSeries, random_function,
                   LigandGroups, ParameterList, Parser,
                   default_parameters, SolutionParameters,
                   SpatialExpression, Derivatives, implicitTS,
-                  Generator)
+                  Generator, dillnp)
 from KSFD.ksfddebug import log
 import KSFD
 
@@ -690,16 +690,9 @@ def main(*args):
             retries=commandlineArguments.series_retries,
             retry_interval=commandlineArguments.series_retry_interval,
         )
-        tseries.info['commandlineArguments'] = np.string_(dill.dumps(
-            commandlineArguments,
-            protocol=0
-        ))
-        tseries.info['SolutionParameters'] = np.string_(
-            dill.dumps(ps, recurse=True, protocol=0)
-        )
-        tseries.info['sources'] = np.string_(
-            dill.dumps(sources, protocol=0)
-        )
+        tseries.info['commandlineArguments'] = dillnp(commandlineArguments)
+        tseries.info['SolutionParameters'] = dillnp(ps, recurse=True)
+        tseries.info['sources'] = dillnp(sources)
         tseries.info['dt'] = float(ps.params0['dt'])
         if 'lastvart' in ps.params0:
             tseries.info['lastvart'] = float(ps.params0['lastvart'])

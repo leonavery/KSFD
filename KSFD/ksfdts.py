@@ -4,8 +4,6 @@ import sys, os, traceback, gc
 import numpy as np
 from datetime import datetime
 import h5py
-import pickle
-import dill
 import zipfile
 import petsc4py
 from mpi4py import MPI
@@ -15,12 +13,14 @@ try:
     from .ksfdmat import getMat
     from .ksfdsym import MPIINT, PetscInt, safe_sympify
     from .ksfdrandom import Generator
+    from .ksfdtsmaker import dillnp
 except ImportError:
     from ksfddebug import log
     from ksfdtimeseries import TimeSeries
     from ksfdmat import getMat
     from ksfdsym import MPIINT, PetscInt, safe_sympify
     from ksfdrandom import Generator
+    from ksfdtsmaker import dillnp
 
 def logTS(*args, **kwargs):
     log(*args, system='TS', **kwargs)
@@ -43,7 +43,7 @@ def dumpTS(obj):
 #
 # The solution is not to import this module when KSFD is
 # imported. (That is, it is not imported by __init__.py.) Instead,
-# __init__.py import a small module that defines factory functions
+# __init__.py imports a small module that defines factory functions
 # that import these modules, instantiate the desired classes, and
 # return them.
 #
@@ -409,18 +409,12 @@ class KSFDTS(petsc4py.PETSc.TS):
             del cpf.info['commandlineArguments']
         except KeyError:
             pass
-        cpf.info['commandlineArguments'] = np.string_(dill.dumps(
-            self.derivs.ps.clargs,
-            protocol=0
-        ))
+        cpf.info['commandlineArguments'] = dillnp(self.derivs.ps.clargs,)
         try:
             del cpf.info['SolutionParameters']
         except KeyError:
             pass
-        cpf.info['SolutionParameters'] = np.string_(dill.dumps(
-            self.derivs.ps, recurse=True,
-            protocol=0
-        ))
+        cpf.info['SolutionParameters'] = dillnp(self.derivs.ps, recurse=True)
         dtd = cpf.info.require_dataset('dt', shape=(), dtype=float)
         dtd[()] = float(h)
         lastvartd = cpf.info.require_dataset('lastvart', shape=(),
@@ -431,10 +425,7 @@ class KSFDTS(petsc4py.PETSc.TS):
                 del cpf.info['sources']
             except KeyError:
                 pass
-            cpf.info['sources'] = np.string_(dill.dumps(
-                self.derivs.sources,
-                protocol=0
-            ))
+            cpf.info['sources'] = dillnp(self.derivs.sources)
         except AttributeError:
             pass
         cpf.store(u, t, k=k)

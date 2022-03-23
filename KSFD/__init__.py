@@ -38,6 +38,8 @@ __all__ = [
     "Generator",
     "random_function",
     "TimeSeries",
+    "dillnp",
+    "dillunp",
     "remap_from_files",
     "makeKSFDSolver",
     "Parameter",

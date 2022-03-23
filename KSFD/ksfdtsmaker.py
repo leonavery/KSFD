@@ -1,7 +1,32 @@
 """Factory functions to make KSFD Teim steppers."""
 import petsc4py
+import numpy as np
+import dill
 from mpi4py import MPI
 from importlib import import_module
+
+# dillnp and dillunp have to be defined here, so they can be imported
+# from KSFD.
+def dillnp(*args, **kwargs):
+    """pickle an object to a numpy unit8 array
+
+    dillnp uses dill to pickle an arbitrary object. It converts the
+    pickle to a numpy uint8 array (which can safely be saved and
+    retrieved from an HDF5 file with h5py and dillunp.
+
+    arguments of dillnp are passed directly to dill.dumps.
+    """
+    obj_bytes = dill.dumps(*args, **kwargs)
+    obj_numpy = np.array(list(obj_bytes), dtype='uint8')
+    return obj_numpy
+
+def dillunp(obj_numpy):
+    """Reverse the action of dillnp)
+    """
+    assert (isinstance(obj_numpy, np.ndarray) and
+            obj_numpy.dtype == np.dtype('uint8'))
+    obj_bytes = bytes(obj_numpy)
+    return dill.loads(obj_bytes)
 
 def ksfdTS(
     derivs,
